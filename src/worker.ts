@@ -10,16 +10,24 @@ type Env={
 }
 
 let ready=false
+function splitSqlScript(sql:string){
+  return sql.split(';').map(s=>s.trim()).filter(Boolean)
+}
+async function runSqlScript(env:Env,sql:string){
+  for(const statement of splitSqlScript(sql)){
+    await env.DB.prepare(statement).run()
+  }
+}
 async function ensureDatabase(env:Env){
   if(ready)return
   try{
     await env.DB.prepare('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1').first()
   }catch{
-    await env.DB.exec(SCHEMA_SQL)
+    await runSqlScript(env,SCHEMA_SQL)
   }
   const row=await env.DB.prepare('SELECT version FROM schema_migrations WHERE version=?').bind(SCHEMA_VERSION).first()
   if(!row){
-    await env.DB.exec(SEED_SQL)
+    await runSqlScript(env,SEED_SQL)
     await env.DB.prepare('INSERT INTO schema_migrations(version) VALUES(?)').bind(SCHEMA_VERSION).run()
   }
   ready=true
@@ -34,14 +42,24 @@ async function parseJson<T=any>(request:Request):Promise<T>{
 function bool(v:any){return Boolean(Number(v))}
 function parseArray<T=any>(value:any,fallback:T[]=[]):T[]{try{return JSON.parse(value||'[]')}catch{return fallback}}
 
+function decodeAccessEmail(token:string){
+  try{
+    const part=token.split('.')[1]
+    if(!part)return null
+    const normalized=part.replace(/-/g,'+').replace(/_/g,'/')
+    const padded=normalized+'='.repeat((4-normalized.length%4)%4)
+    const payload=JSON.parse(atob(padded))
+    return typeof payload.email==='string'?payload.email:null
+  }catch{return null}
+}
 async function requireAdmin(request:Request,env:Env,ctx:AccessContext){
   if(env.ADMIN_DEV_BYPASS==='true')return {email:'dev@local'}
   if(ctx.access){
     const identity=await ctx.access.getIdentity()
     if(identity?.email)return {email:identity.email}
   }
-  const headerEmail=request.headers.get('Cf-Access-Authenticated-User-Email')||request.headers.get('cf-access-authenticated-user-email')
-  if(headerEmail)return {email:headerEmail}
+  const accessJwt=request.headers.get('cf-access-jwt-assertion')
+  if(accessJwt)return {email:decodeAccessEmail(accessJwt)}
   throw new Response('Cloudflare Access required',{status:403})
 }
 async function audit(env:Env,email:string|null,action:string,entityType?:string,entityId?:string){
@@ -109,6 +127,21 @@ async function saveProduct(env:Env,body:any){
 async function handleApi(request:Request,env:Env,ctx:AccessContext){
   const url=new URL(request.url);const path=url.pathname
   await ensureDatabase(env)
+
+  if(request.method==='GET'&&path==='/api/health'){
+    const health:any={release:'v3-d1-r2-hotfix-2',dbBinding:Boolean(env.DB),r2Binding:Boolean(env.MEDIA),schema:false,seed:false,error:null}
+    try{
+      await ensureDatabase(env)
+      const migration=await env.DB.prepare('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1').first()
+      const productCount=await env.DB.prepare('SELECT COUNT(*) AS n FROM products').first()
+      health.schema=Boolean(migration)
+      health.seed=Number(productCount?.n||0)>0
+      health.products=Number(productCount?.n||0)
+    }catch(error){
+      health.error=error instanceof Error?error.message:String(error)
+    }
+    return json(health,health.error?500:200)
+  }
 
   if(request.method==='GET'&&path==='/api/catalog'){
     const data=await getCatalog(env,false)
