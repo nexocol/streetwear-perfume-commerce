@@ -2,7 +2,7 @@ import { brand, products, home, sizeGuide } from './data.js';
 import { store, addToCart, hydrateCart } from './store.js';
 
 const root=document.querySelector('#app');
-const money=v=>v==null?'Precio pendiente':new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(v);
+const money=v=>v==null?'CONSULTAR':new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(v);
 const bySlug=slug=>store.products().find(p=>p.slug===slug);
 const byId=id=>store.products().find(p=>p.id===id);
 const go=path=>{history.pushState({},'',path);render();scrollTo({top:0,behavior:'smooth'})};
@@ -12,7 +12,7 @@ function nav(){
   const count=store.cart().reduce((n,i)=>n+i.quantity,0);
   return `<header class="nav">
     <button class="nav-menu" data-menu>MENU</button>
-    <a href="/" data-link class="brand"><b>${brand.mark}</b><span>${brand.season}</span></a>
+    <a href="/" data-link class="brand"><span>${brand.season}</span></a>
     <nav><a href="/shop" data-link>SHOP</a><a href="/#fragrance" data-link>FRAGRANCE</a><a href="/#editorial" data-link>EDITORIAL</a></nav>
     <div class="nav-actions"><button data-cart> BAG <span>${count}</span></button></div>
   </header>
@@ -46,10 +46,10 @@ function homePage(){
   return `<main id="main">
     <section class="hero">
       <div class="hero-copy">
-        <span class="eyebrow">01 / NEW DROP / COLOMBIA</span>
+        <span class="eyebrow">01 / DROP 001 / STREETWEAR + FRAGRANCE</span>
         <h1>${home.heroHeadline.replace('\n','<br>')}</h1>
         <p>${home.heroSubheadline}</p>
-        <div class="hero-actions"><a href="/shop" data-link class="btn dark">SHOP THE DROP</a><button data-product="${hero.slug}">VIEW HERO ↗</button></div>
+        <div class="hero-actions"><a href="/shop" data-link class="btn dark">SHOP THE DROP</a><button data-product="${hero.slug}">EXPLORE DENIM ↗</button></div>
       </div>
       <button class="hero-image" data-product="${hero.slug}"><img src="${hero.media[0].src}" alt="${hero.media[0].alt}"></button>
       <div class="float one"><img src="${ps[2].media[0].src}" alt=""></div>
@@ -70,7 +70,7 @@ function homePage(){
     </section>
     <section id="fragrance" class="fragrance">
       <div class="fragrance-img"><img src="${perfume[0].media[0].src}" alt="${perfume[0].media[0].alt}"></div>
-      <div class="fragrance-copy"><span>04 / FRAGRANCE EDIT</span><h2>SCENT<br>AFTER<br>DARK.</h2><p>Las fragancias conservan un lenguaje más sensorial y refinado sin romper la identidad general del storefront.</p><button data-product="${perfume[0].slug}" class="btn light">EXPLORE FRAGRANCE</button></div>
+      <div class="fragrance-copy"><span>04 / FRAGRANCE EDIT</span><h2>SCENT<br>AFTER<br>DARK.</h2><p>Una edición de fragancias con un ritmo más sensorial, atmosférico y refinado.</p><button data-product="${perfume[0].slug}" class="btn light">EXPLORE FRAGRANCE</button></div>
       <div class="fragrance-mini"><img src="${perfume[1].media[0].src}" alt=""></div>
     </section>
     <section id="editorial" class="editorial">
@@ -87,7 +87,7 @@ function shopPage(){
   const all=store.products();
   const cats=['Todos',...new Set(all.map(p=>p.category))];
   const list=cat==='Todos'?all:all.filter(p=>p.category===cat);
-  return `<main id="main"><section class="shop-hero"><span>SHOP / ALL PRODUCTS</span><h1>THE<br>EDIT.</h1><p>${list.length} PRODUCTS / REAL CLIENT ASSETS</p></section>
+  return `<main id="main"><section class="shop-hero"><span>SHOP / ALL PRODUCTS</span><h1>THE<br>EDIT.</h1><p>${list.length} PIECES / DROP 001</p></section>
     <div class="filters">${cats.map(c=>`<button class="${c===cat?'active':''}" data-cat="${c}">${c}</button>`).join('')}</div>
     <section class="catalog">${list.map(card).join('')}</section></main>`;
 }
@@ -109,7 +109,7 @@ function productPage(slug){
 function adminPage(){
   const ps=store.products();
   return `<main id="main" class="admin">
-    <aside class="admin-side"><a href="/" data-link class="admin-logo">B/S</a><nav><button class="active">PRODUCTOS</button><button>HOME</button><button>COLLECTIONS</button></nav><small>CMS CONTROLADO / V1 LOCAL</small></aside>
+    <aside class="admin-side"><a href="/" data-link class="admin-logo">CMS</a><nav><button class="active">PRODUCTOS</button><button>HOME</button><button>COLLECTIONS</button></nav><small>CMS CONTROLADO / V1 LOCAL</small></aside>
     <section class="admin-main"><header><div><span>ADMIN / CONTENT SYSTEM</span><h1>CATALOG.</h1></div><button class="btn dark" data-new>+ NEW PRODUCT</button></header>
       <div class="admin-table">${ps.map(p=>`<div class="admin-row"><img src="${p.media[0].src}" alt=""><div><b>${p.name}</b><small>${p.subtitle}</small></div><span>${p.category}</span><span>${p.featured?'FEATURED':'STANDARD'}</span><button data-edit="${p.id}">EDIT</button></div>`).join('')}</div>
       <div class="architecture"><span>ARCHITECTURE</span><b>CUSTOM STOREFRONT</b><i>↓</i><b>CONTROLLED CMS</b><i>↓</i><b>SHOPIFY COMMERCE LAYER</b><i>↓</i><b>SHOPIFY CHECKOUT</b></div>
@@ -121,14 +121,14 @@ function notFound(){return `<main id="main" class="notfound"><span>404</span><h1
 
 function cart(){
   const items=hydrateCart();
-  return `<div class="backdrop" data-cart-close></div><aside class="cart" data-cart-panel><header><span>BAG / ${items.length}</span><button data-cart-close>×</button></header><div class="cart-items">${items.length?items.map(i=>`<div class="cart-item"><img src="${i.product.media[0].src}" alt=""><div><b>${i.product.name}</b><span>QTY ${i.quantity}</span><span>${money(i.product.price)}</span></div></div>`).join(''):'<p>Your bag is empty.</p>'}</div><footer><div><span>SUBTOTAL</span><b>Pending prices</b></div><button class="btn light wide">CHECKOUT / SHOPIFY PENDING</button></footer></aside>`;
+  return `<div class="backdrop" data-cart-close></div><aside class="cart" data-cart-panel><header><span>BAG / ${items.length}</span><button data-cart-close>×</button></header><div class="cart-items">${items.length?items.map(i=>`<div class="cart-item"><img src="${i.product.media[0].src}" alt=""><div><b>${i.product.name}</b><span>QTY ${i.quantity}</span><span>${money(i.product.price)}</span></div></div>`).join(''):'<p>Your bag is empty.</p>'}</div><footer><div><span>SUBTOTAL</span><b>—</b></div><button class="btn light wide">CHECKOUT — PRÓXIMAMENTE</button></footer></aside>`;
 }
 
 function sizeModal(){
   return `<dialog id="size-dialog"><button class="dialog-close" data-dialog-close>×</button><span>SIZE SYSTEM</span><h2>${sizeGuide.title}</h2><div class="size-table"><div class="size-row head">${sizeGuide.headers.map(x=>`<b>${x}</b>`).join('')}</div>${sizeGuide.rows.map(r=>`<div class="size-row">${r.map(x=>`<span>${x}</span>`).join('')}</div>`).join('')}</div><p>${sizeGuide.note}</p></dialog>`;
 }
 
-function footer(){return `<footer class="footer"><div class="footer-big">NOT FOR EVERYONE.</div><div class="footer-grid"><div><span>SHOP</span><a href="/shop" data-link>All products</a><a href="/shop?cat=Jeans" data-link>Denim</a></div><div><span>INFO</span><p>Changes</p><p>Shipping</p></div><div><span>STATUS</span><p>Shopify integration pending</p></div><div><b>B/S</b><small>V1 / 2026</small></div></div></footer>`}
+function footer(){return `<footer class="footer"><div class="footer-big">NOT FOR EVERYONE.</div><div class="footer-grid"><div><span>SHOP</span><a href="/shop" data-link>All products</a><a href="/shop?cat=Jeans" data-link>Denim</a></div><div><span>INFO</span><p>Changes</p><p>Shipping</p></div><div><span>DROP</span><p>Collection 001</p></div><div><b>2026</b><small>PREVIEW</small></div></div></footer>`}
 
 function render(){
   const path=location.pathname;
@@ -158,3 +158,16 @@ function reveal(){
 
 addEventListener('popstate',render);
 render();
+
+const cursorNode=document.querySelector('#cursor');
+if(cursorNode && matchMedia('(pointer:fine)').matches){
+  const label=cursorNode.querySelector('span');
+  addEventListener('pointermove',e=>{
+    cursorNode.style.transform=`translate3d(${e.clientX}px,${e.clientY}px,0)`;
+  });
+  document.addEventListener('pointerover',e=>{
+    const target=e.target.closest('a,button,[data-product]');
+    cursorNode.classList.toggle('active',Boolean(target));
+    if(label) label.textContent=target?.hasAttribute('data-product')?'VIEW':target?'OPEN':'';
+  });
+}
