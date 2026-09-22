@@ -1,0 +1,2 @@
+export function LoadingState(){return <main id="main" className="loading-page"><div className="loading-hero"></div><div className="loading-lines"><i></i><i></i><i></i></div></main>}
+export function ErrorState({message,onRetry}:{message:string;onRetry:()=>void}){return <main id="main" className="error-page"><span>CATÁLOGO</span><h1>NO PUDIMOS CARGAR LA TIENDA.</h1><p>{message}</p><button className="btn dark" onClick={onRetry}>REINTENTAR</button></main>}
