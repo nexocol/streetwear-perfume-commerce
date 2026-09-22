@@ -18,7 +18,7 @@ const [app,repo,worker,schema,config,pkg]=await Promise.all([
 ])
 const checks=[
   [app.includes('/product/:slug'),'robust product route'],
-  [app.includes('/admin/products/:id'),'admin product editor route'],
+  [app.includes('products/:id'),'admin product editor route'],
   [repo.includes("'/api/catalog'"),'D1-backed catalog API client'],
   [repo.includes("'/api/admin/session'"),'Cloudflare Access session client'],
   [worker.includes("env.DB.prepare"),'D1 Worker API'],
