@@ -47,8 +47,8 @@ const variantSizes = sizes => sizes.map(size=>({
 
 export const products=[
   {
-    id:'denim-01',slug:'ref-temporal-denim-01',name:'DENIM 01',
-    subtitle:'Flared denim · Drop 001',category:'Jeans',collections:['Denim','Drop 001'],
+    id:'denim-01',slug:'ref-temporal-denim-01',name:'DENIM / 001',nameStatus:'provisional',sortOrder:1,
+    subtitle:'Flared Fit · Denim',category:'Jeans',collections:['Denim','Drop 001'],
     fit:'Flared Fit',color:'Blue',price:null,compareAtPrice:null,featured:true,bestSeller:true,newArrival:true,
     description:'Denim de estructura sólida con silueta amplia y caída definida.',
     features:denimFeatures,
@@ -61,10 +61,10 @@ export const products=[
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'denim-02',slug:'ref-temporal-denim-02',name:'DENIM 02',
-    subtitle:'Grey flared · Drop 001',category:'Jeans',collections:['Denim','Drop 001'],
+    id:'denim-02',slug:'ref-temporal-denim-02',name:'DENIM / 002',nameStatus:'provisional',sortOrder:2,
+    subtitle:'Flared Fit · Grey Denim',category:'Jeans',collections:['Denim','Drop 001'],
     fit:'Flared Fit',color:'Grey',price:null,featured:true,bestSeller:false,newArrival:true,
-    description:'Denim gris de la selección actual.',
+    description:'Denim gris con silueta amplia y acabado lavado.',
     features:denimFeatures,
     media:[
       {type:'hero',src:driveImage(ids.denimGrey),alt:'Jean gris flared real del cliente'},
@@ -74,10 +74,10 @@ export const products=[
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'tee-01',slug:'ref-temporal-tee-01',name:'GRAPHIC TEE 01',
-    subtitle:'Graphic streetwear · Drop 001',category:'Streetwear',collections:['Graphic','Drop 001'],
+    id:'tee-01',slug:'ref-temporal-tee-01',name:'TEE / 001',nameStatus:'provisional',sortOrder:3,
+    subtitle:'Oversized · Graphic',category:'Streetwear',collections:['Graphic','Drop 001'],
     fit:'Oversized',color:'Multi',price:null,featured:true,bestSeller:true,newArrival:false,
-    description:'Graphic streetwear de la selección actual.',
+    description:'Camiseta gráfica de silueta amplia para looks streetwear.',
     features:[],
     media:[
       {type:'hero',src:driveImage(ids.tee1),alt:'Camisetas gráficas reales del cliente'},
@@ -88,8 +88,8 @@ export const products=[
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'set-01',slug:'ref-temporal-set-01',name:'TECHNICAL SET 01',
-    subtitle:'Technical black set · Drop 001',category:'Conjuntos',collections:['Technical'],
+    id:'set-01',slug:'ref-temporal-set-01',name:'SET / 001',nameStatus:'provisional',sortOrder:4,
+    subtitle:'Regular Fit · Black Set',category:'Conjuntos',collections:['Technical','Drop 001'],
     fit:'Regular',color:'Black',price:null,featured:true,bestSeller:false,newArrival:true,
     description:'Conjunto negro de la selección actual.',
     features:[],
@@ -98,8 +98,8 @@ export const products=[
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'perfume-01',slug:'ref-temporal-perfume-01',name:'FRAGRANCE 01',
-    subtitle:'Fragrance edit · Drop 001',category:'Perfumes',collections:['Fragrance Edit'],
+    id:'perfume-01',slug:'ref-temporal-perfume-01',name:'FRAGRANCE / 001',nameStatus:'provisional',sortOrder:5,
+    subtitle:'Fragrance Edit · Drop 001',category:'Perfumes',collections:['Fragrance Edit','Drop 001'],
     fit:null,color:'Pink',price:null,featured:true,bestSeller:true,newArrival:true,
     description:'Fragancia de la selección actual.',
     features:[],
@@ -108,8 +108,8 @@ export const products=[
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'perfume-02',slug:'ref-temporal-perfume-02',name:'FRAGRANCE 02',
-    subtitle:'Fragrance edit · Drop 001',category:'Perfumes',collections:['Fragrance Edit'],
+    id:'perfume-02',slug:'ref-temporal-perfume-02',name:'FRAGRANCE / 002',nameStatus:'provisional',sortOrder:6,
+    subtitle:'Fragrance Edit · Drop 001',category:'Perfumes',collections:['Fragrance Edit','Drop 001'],
     fit:null,color:'Pink',price:null,featured:false,bestSeller:true,newArrival:false,
     description:'Fragancia de la selección actual.',
     features:[],
@@ -120,8 +120,8 @@ export const products=[
 ];
 
 export const home={
-  heroHeadline:'WEAR THE\nATTITUDE.',
-  heroSubheadline:'Denim, streetwear y fragancias en una selección visual construida alrededor del producto.',
+  heroHeadline:'DROP / 001\nDENIM + STREETWEAR',
+  heroSubheadline:'Jeans, prendas streetwear y fragancias del drop actual.',
   heroProductId:'denim-01',
   heroSecondaryProductId:'denim-02',
   featuredIds:['denim-01','tee-01','denim-02','set-01'],
