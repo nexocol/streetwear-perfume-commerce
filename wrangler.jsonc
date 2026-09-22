@@ -1,9 +1,25 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "streetwear-perfume-commerce",
+  "main": "./src/worker.ts",
   "compatibility_date": "2026-09-22",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  }
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "streetwear-perfume-commerce-db",
+      "database_id": "aec7e134-d2d7-4c1d-9912-49577b439d45"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "streetwear-perfume-commerce-media"
+    }
+  ]
 }
