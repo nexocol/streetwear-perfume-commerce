@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "node scripts/v3-smoke.mjs",
     "deploy": "npm run build && wrangler deploy",
-    "deploy:v3": "npm run build && wrangler deploy -c wrangler.v3.jsonc"
+    "deploy:v3": "npm run build && wrangler deploy -c wrangler.v3.jsonc",
+    "qa": "playwright test"
   },
   "dependencies": {
     "react": "^19.1.1",
@@ -24,6 +25,7 @@
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
     "wrangler": "^4.35.0",
-    "@types/node": "^24.5.2"
+    "@types/node": "^24.5.2",
+    "@playwright/test": "^1.55.0"
   }
 }

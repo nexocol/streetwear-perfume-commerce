@@ -1,0 +1,29 @@
+name: V3.1 Premium QA
+on:
+  push:
+    branches: [v3.1-premium-polish]
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npm install
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build
+        run: npm run build
+      - name: Smoke
+        run: npm test
+      - name: Playwright QA
+        run: npm run qa
+      - name: Upload QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-1-qa-screenshots
+          path: qa-screenshots/
+          if-no-files-found: warn
