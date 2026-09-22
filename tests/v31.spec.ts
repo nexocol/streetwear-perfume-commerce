@@ -19,6 +19,14 @@ async function mockApi(page:Page){
   })
 }
 async function waitStore(page:Page){await expect(page.locator('.hero, .shop-hero, .pdp, .admin-page').first()).toBeVisible()}
+async function revealForScreenshot(page:Page){
+  await page.evaluate(async()=>{
+    const max=document.documentElement.scrollHeight-window.innerHeight
+    for(let y=0;y<=max;y+=Math.max(420,window.innerHeight*.65)){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,45))}
+    window.scrollTo(0,max);await new Promise(r=>setTimeout(r,100));window.scrollTo(0,0)
+  })
+  await page.waitForTimeout(350)
+}
 
 test('storefront critical journey',async({page})=>{
   await mockApi(page);await page.goto('/');await waitStore(page)
@@ -67,14 +75,14 @@ test('admin primary operations',async({page})=>{
 
 for(const [width,height] of [[1440,1000],[1024,900],[768,1024],[430,900],[390,844]]){
   test('visual home '+width,async({page})=>{
-    await page.setViewportSize({width,height});await mockApi(page);await page.goto('/');await waitStore(page)
+    await page.setViewportSize({width,height});await mockApi(page);await page.goto('/');await waitStore(page);await revealForScreenshot(page)
     await page.screenshot({path:'qa-screenshots/home-'+width+'.png',fullPage:true})
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBeTruthy()
   })
 }
 for(const [width,height] of [[1440,1000],[768,1024],[430,900]]){
   test('visual admin '+width,async({page})=>{
-    await page.setViewportSize({width,height});await mockApi(page);await page.goto('/admin/home');await expect(page.getByRole('heading',{name:'HOME.'})).toBeVisible()
+    await page.setViewportSize({width,height});await mockApi(page);await page.goto('/admin/home');await expect(page.getByRole('heading',{name:'HOME.'})).toBeVisible();await page.waitForTimeout(450)
     await page.screenshot({path:'qa-screenshots/admin-'+width+'.png',fullPage:true})
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBeTruthy()
   })
