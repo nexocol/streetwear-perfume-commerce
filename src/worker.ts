@@ -34,11 +34,15 @@ async function parseJson<T=any>(request:Request):Promise<T>{
 function bool(v:any){return Boolean(Number(v))}
 function parseArray<T=any>(value:any,fallback:T[]=[]):T[]{try{return JSON.parse(value||'[]')}catch{return fallback}}
 
-async function requireAdmin(env:Env,ctx:AccessContext){
+async function requireAdmin(request:Request,env:Env,ctx:AccessContext){
   if(env.ADMIN_DEV_BYPASS==='true')return {email:'dev@local'}
-  if(!ctx.access)throw new Response('Cloudflare Access required',{status:403})
-  const identity=await ctx.access.getIdentity()
-  return {email:identity?.email||null}
+  if(ctx.access){
+    const identity=await ctx.access.getIdentity()
+    if(identity?.email)return {email:identity.email}
+  }
+  const headerEmail=request.headers.get('Cf-Access-Authenticated-User-Email')||request.headers.get('cf-access-authenticated-user-email')
+  if(headerEmail)return {email:headerEmail}
+  throw new Response('Cloudflare Access required',{status:403})
 }
 async function audit(env:Env,email:string|null,action:string,entityType?:string,entityId?:string){
   await env.DB.prepare('INSERT INTO admin_audit_log(id,actor_email,action,entity_type,entity_id) VALUES(?,?,?,?,?)')
@@ -125,7 +129,7 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
   }
 
   if(!path.startsWith('/api/admin/'))return json({error:'Not found'},404)
-  const admin=await requireAdmin(env,ctx)
+  const admin=await requireAdmin(request,env,ctx)
 
   if(request.method==='GET'&&path==='/api/admin/session')return json({email:admin.email})
   if(request.method==='GET'&&path==='/api/admin/catalog')return json(await getCatalog(env,true))
