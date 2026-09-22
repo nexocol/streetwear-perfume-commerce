@@ -35,3 +35,8 @@ Do not replace `main` until:
 - V3 CI is green;
 - storefront visual comparison against V2.6 passes;
 - storefront and admin E2E pass.
+
+
+## Production hotfix 2026-09-22
+- Removed `PRAGMA foreign_keys = ON`; D1 enforces foreign keys by default and does not allow changing that pragma inside its implicit transactions.
+- Admin authentication reads `ctx.access` when available and falls back to Cloudflare Access' authenticated email header when the Static Assets router does not propagate `ctx.access`.
