@@ -14,7 +14,7 @@ app=app.replace('location.origin','window.virtualLocation.origin').replace('loca
 app=app.replace('history.pushState','window.virtualHistory.pushState').replace('history.replaceState','window.virtualHistory.replaceState')
 virtual="""
 window.virtualStorage={_d:{},getItem(k){return this._d[k]??null},setItem(k,v){this._d[k]=String(v)},removeItem(k){delete this._d[k]}};
-window.virtualLocation={origin:'https://v25.local',pathname:'/',search:'',hash:''};
+window.virtualLocation={origin:'https://v26.local',pathname:'/',search:'',hash:''};
 window._stack=['/'];window._index=0;
 window._applyVirtual=(href)=>{const u=new URL(href,window.virtualLocation.origin);window.virtualLocation.pathname=u.pathname;window.virtualLocation.search=u.search;window.virtualLocation.hash=u.hash;};
 window.virtualHistory={
@@ -66,6 +66,20 @@ with sync_playwright() as p:
     expect(page.locator('#fragrance')).to_be_visible()
     page.get_by_role('link',name='EDITORIAL').first.click()
     expect(page.locator('#editorial')).to_be_visible()
+
+    # Trust rail + footer interactions
+    page.evaluate("window.virtualHistory.replaceState({},'', '/'); dispatchEvent(new PopStateEvent('popstate'))")
+    page.locator('.trust-rail [data-service="size"]').click(); expect(page.locator('#size-dialog')).to_be_visible(); page.locator('#size-dialog [data-dialog-close]').click()
+    for service in ['changes','advice','shipping']:
+        page.locator(f'.trust-rail [data-service="{service}"]').click(); expect(page.locator('#service-dialog')).to_be_visible(); page.locator('#service-dialog [data-dialog-close]').click()
+    page.locator('.footer [data-service="shipping"]').click(); expect(page.locator('#service-dialog')).to_be_visible(); page.locator('#service-dialog [data-dialog-close]').click()
+
+    # Responsive layout checks requested for preview QA
+    for width,height in [(1024,768),(768,900),(430,900)]:
+        vp=browser.new_page(viewport={"width":width,"height":height}); vp.route('**/*',lambda route: route.abort()); vp.set_content(html,wait_until='domcontentloaded')
+        expect(vp.locator('.hero')).to_be_visible()
+        assert vp.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), f"horizontal overflow at {width}px"
+        vp.close()
 
     mobile=browser.new_page(viewport={"width":390,"height":844})
     mobile.route('**/*',lambda route: route.abort())

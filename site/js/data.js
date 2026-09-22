@@ -1,7 +1,8 @@
 export const brand = {
   name: '',
-  placeholder: '[ BRAND ]',
-  season: 'STORE / 001',
+  logo: null,
+  display: 'STORE / 001',
+  season: 'DROP / 001',
   currency: 'COP'
 };
 
@@ -53,9 +54,7 @@ export const products=[
     description:'Denim de estructura sólida con silueta amplia y caída definida.',
     features:denimFeatures,
     media:[
-      {type:'hero',src:driveImage(ids.denimDistressed),alt:'Jean denim distressed real del cliente'},
-      {type:'detail',src:driveImage(ids.denimPattern),alt:'Detalle denim real del cliente'},
-      {type:'editorial',src:driveImage(ids.denimGrey),alt:'Jean gris flared real del cliente'}
+      {type:'hero',src:driveImage(ids.denimDistressed),alt:'Jean denim distressed real del cliente'}
     ],
     variants:variantSizes(['30','32','34','36','38']),
     shopifyMapping:{productId:null,handle:null}
@@ -67,8 +66,7 @@ export const products=[
     description:'Denim gris con silueta amplia y acabado lavado.',
     features:denimFeatures,
     media:[
-      {type:'hero',src:driveImage(ids.denimGrey),alt:'Jean gris flared real del cliente'},
-      {type:'detail',src:driveImage(ids.denimDistressed),alt:'Detalle denim real del cliente'}
+      {type:'hero',src:driveImage(ids.denimGrey),alt:'Jean gris flared real del cliente'}
     ],
     variants:variantSizes(['30','32','34','36','38']),
     shopifyMapping:{productId:null,handle:null}
@@ -80,9 +78,7 @@ export const products=[
     description:'Camiseta gráfica de silueta amplia para looks streetwear.',
     features:[],
     media:[
-      {type:'hero',src:driveImage(ids.tee1),alt:'Camisetas gráficas reales del cliente'},
-      {type:'back',src:driveImage(ids.teeBack),alt:'Vista posterior de camisetas reales del cliente'},
-      {type:'editorial',src:driveImage(ids.tee3),alt:'Camisetas gráficas en exhibición'}
+      {type:'hero',src:driveImage(ids.tee1),alt:'Camisetas gráficas reales del cliente'}
     ],
     variants:variantSizes(['S','M','L','XL']),
     shopifyMapping:{productId:null,handle:null}
@@ -122,10 +118,11 @@ export const products=[
 export const home={
   heroHeadline:'DROP / 001\nDENIM + STREETWEAR',
   heroSubheadline:'Jeans, prendas streetwear y fragancias del drop actual.',
-  heroProductId:'denim-01',
-  heroSecondaryProductId:'denim-02',
+  heroProductId:'denim-02',
+  heroSecondaryProductId:'denim-01',
   featuredIds:['denim-01','tee-01','denim-02','set-01'],
   fragrancePrimaryId:'perfume-01',
   fragranceSecondaryId:'perfume-02',
-  editorialProductId:'tee-01'
+  editorialProductId:'tee-01',
+  editorialImage:driveImage(ids.teeBack)
 };
