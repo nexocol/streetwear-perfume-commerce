@@ -32,7 +32,7 @@ export function HomePage(){
 
     <section className="featured-section">
       <div className="featured-intro" data-reveal="mask"><div><span>02 / SELECCIÓN</span><p>PIEZAS DESTACADAS</p></div><h2><span>DROP</span><br/><span>001</span></h2><Link to="/shop">VER TODO ↗</Link></div>
-      <div className="featured-composition">{selected.map((p,i)=><ProductCard key={p.id} product={p} index={i} className={'featured-card featured-card-'+(i+1)}/>)}</div>
+      <div className="featured-composition">{selected.map((p,i)=><ProductCard key={p.id} product={p} index={i} eager className={'featured-card featured-card-'+(i+1)}/>)}</div>
     </section>
 
     <section className="collections">
@@ -53,7 +53,7 @@ export function HomePage(){
 
     {editorial&&<section id="editorial" className="editorial">
       <div className="editorial-copy" data-reveal="mask"><span className="editorial-kicker">05 / LOOKBOOK</span><div className="editorial-word"><span>EDITORIAL</span><br/><span>/ 001</span></div><p>Explora las prendas desde otra perspectiva.</p><Link to="/shop">VER TIENDA ↗</Link></div>
-      <div className="editorial-img" data-reveal="image"><ImageWithFallback src={cfg.editorialImageUrl||editorial.media[0]?.publicUrl} alt="Selección editorial de prendas reales del catálogo" loading="lazy"/></div>
+      <div className="editorial-img" data-reveal="image"><ImageWithFallback src={cfg.editorialImageUrl||editorial.media[0]?.publicUrl} alt="Selección editorial de prendas reales del catálogo" loading="eager" fetchPriority="low"/></div>
       <span className="editorial-product-label">{editorial.name}</span>
     </section>}
     <TrustRail/>
