@@ -25,6 +25,7 @@ async function revealForScreenshot(page:Page){
     for(let y=0;y<=max;y+=Math.max(420,window.innerHeight*.65)){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,45))}
     window.scrollTo(0,max);await new Promise(r=>setTimeout(r,100));window.scrollTo(0,0)
   })
+  await page.evaluate(()=>document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible')))
   await page.waitForTimeout(350)
 }
 
