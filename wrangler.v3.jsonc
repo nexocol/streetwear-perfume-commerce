@@ -13,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "streetwear-perfume-commerce-db",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "database_id": "aec7e134-d2d7-4c1d-9912-49577b439d45"
     }
   ],
   "r2_buckets": [
