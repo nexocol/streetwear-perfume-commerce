@@ -1,0 +1,23 @@
+name: V3 Migration CI
+
+on:
+  push:
+    branches: [v3-production-foundation]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Smoke
+        run: npm test
