@@ -62,3 +62,20 @@ html,body{max-width:100%;overflow-x:clip}
 @media(max-width:390px){.hero-title{font-size:38px}.fragrance-copy h2{font-size:40px}.editorial-word{font-size:40px}.featured-intro h2{font-size:14.5vw}.editorial-word{font-size:12.8vw}.fragrance-copy h2{font-size:15vw}}
 @media(pointer:fine){.storefront-root a,.storefront-root button,.storefront-root [data-cursor]{cursor:none}}
 @media(prefers-reduced-motion:reduce){.ticker-track{animation:none!important}.loading-hero{animation:none}.category-preview img{animation:none}}
+
+@media(max-width:1024px){
+  .storefront-root .fragrance .fragrance-copy h2,
+  .storefront-root .editorial .editorial-word{font-size:54px!important;line-height:.88!important}
+}
+@media(max-width:768px){
+  .storefront-root .fragrance .fragrance-copy h2,
+  .storefront-root .editorial .editorial-word{font-size:48px!important;line-height:.9!important}
+}
+@media(max-width:430px){
+  .storefront-root .fragrance .fragrance-copy h2,
+  .storefront-root .editorial .editorial-word{font-size:40px!important}
+}
+@media(max-width:390px){
+  .storefront-root .fragrance .fragrance-copy h2,
+  .storefront-root .editorial .editorial-word{font-size:38px!important}
+}
