@@ -160,6 +160,13 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
     if(row.public_url)return Response.redirect(row.public_url,302)
     return new Response('Not found',{status:404})
   }
+  if(request.method==='GET'&&path.startsWith('/api/site-media/')){
+    const key=decodeURIComponent(path.slice('/api/site-media/'.length))
+    const object=await env.MEDIA.get(key)
+    if(!object)return new Response('Not found',{status:404})
+    const headers=new Headers();object.writeHttpMetadata(headers);headers.set('etag',object.httpEtag);headers.set('Cache-Control','public, max-age=31536000, immutable')
+    return new Response(object.body,{headers})
+  }
 
   if(!path.startsWith('/api/admin/'))return json({error:'Not found'},404)
   const admin=await requireAdmin(request,env,ctx)
@@ -203,6 +210,18 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
   }
   if(path==='/api/admin/media/reorder'&&request.method==='POST'){
     const {ids}=await parseJson<any>(request);const statements=(ids||[]).map((id:string,i:number)=>env.DB.prepare('UPDATE product_media SET sort_order=? WHERE id=?').bind(i+1,id));if(statements.length)await env.DB.batch(statements);return json({ok:true})
+  }
+  if(path==='/api/admin/home/editorial-image'&&request.method==='POST'){
+    const form=await request.formData();const file=form.get('file')
+    if(!(file instanceof File))return json({error:'Archivo requerido'},400)
+    if(!file.type.startsWith('image/'))return json({error:'Solo se permiten imágenes.'},400)
+    if(file.size>10*1024*1024)return json({error:'La imagen supera 10 MB.'},400)
+    const safe=file.name.toLowerCase().replace(/[^a-z0-9._-]+/g,'-')
+    const key='home/editorial/'+crypto.randomUUID()+'-'+safe
+    await env.MEDIA.put(key,file.stream(),{httpMetadata:{contentType:file.type||'application/octet-stream'}})
+    const url='/api/site-media/'+encodeURIComponent(key)
+    await audit(env,admin.email,'home.editorial.upload','homepage','default')
+    return json({url},201)
   }
   if(path==='/api/admin/home'&&request.method==='PUT'){
     const h=await parseJson<any>(request)

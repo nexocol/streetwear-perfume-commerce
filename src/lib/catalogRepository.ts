@@ -35,6 +35,10 @@ export async function setProductStatus(id:string,status:'active'|'hidden'|'archi
   await api('/api/admin/products/'+encodeURIComponent(id)+'/status',{method:'PATCH',body:JSON.stringify({status})})
 }
 export async function saveHomepage(home:HomepageSettings){await api('/api/admin/home',{method:'PUT',body:JSON.stringify(home)})}
+export async function uploadHomepageEditorialImage(file:File){
+  const form=new FormData();form.set('file',file)
+  return api<{url:string}>('/api/admin/home/editorial-image',{method:'POST',body:form})
+}
 export async function saveSiteSettings(site:SiteSettings){await api('/api/admin/settings',{method:'PUT',body:JSON.stringify(site)})}
 export async function saveTaxonomy(table:'categories'|'collections'|'fits',row:any){await api('/api/admin/taxonomy/'+table,{method:'PUT',body:JSON.stringify(row)})}
 export async function uploadProductMedia(productId:string,file:File,mediaType:string,alt:string){

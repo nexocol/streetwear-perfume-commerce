@@ -4,6 +4,9 @@ import { useCatalog } from '../context/CatalogContext'
 import { useCommerce } from '../commerce/CommerceProvider'
 import { useUI } from '../context/UIContext'
 
+function SearchIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.2 4.2"/></svg>}
+function BagIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 8.5h13l1.2 11H4.3l1.2-11Z"/><path d="M8.6 9V6.7a3.4 3.4 0 0 1 6.8 0V9"/></svg>}
+
 export function Header(){
   const {catalog}=useCatalog(); const commerce=useCommerce(); const ui=useUI(); const location=useLocation()
   const brand=useMemo(()=>({name:catalog?.site.brandName||'STORE / 001',logo:catalog?.site.logoUrl,season:'DROP / 001'}),[catalog])
@@ -31,7 +34,10 @@ export function Header(){
         <Link to="/#fragrance" data-cursor="ABRIR">FRAGRANCE</Link>
         <Link to="/#editorial" data-cursor="ABRIR">EDITORIAL</Link>
       </nav>
-      <div className="nav-actions"><button onClick={ui.openSearch} data-cursor="BUSCAR">BUSCAR</button><button onClick={ui.openCart} data-cursor="ABRIR">CARRITO <span>{count}</span></button></div>
+      <div className="nav-actions">
+        <button className="nav-icon" onClick={ui.openSearch} data-cursor="BUSCAR" aria-label="Buscar"><SearchIcon/><span className="sr-only">Buscar</span></button>
+        <button className="nav-icon bag-action" onClick={ui.openCart} data-cursor="ABRIR" aria-label={'Abrir carrito, '+count+' productos'}><BagIcon/><span className="bag-count">{count}</span><span className="sr-only">Carrito</span></button>
+      </div>
     </header>
     <aside className={'mobile-menu '+(ui.menuOpen?'open':'')} aria-hidden={!ui.menuOpen}>
       <div className="mobile-menu-top"><span>{brand.name}</span><button onClick={ui.closeMenu} aria-label="Cerrar menú">×</button></div>
