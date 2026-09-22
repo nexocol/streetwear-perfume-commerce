@@ -1,6 +1,6 @@
 export const brand = {
   name: 'BRAND / STORE',
-  mark: 'B/S',
+  mark: '',
   season: 'DROP / 2026',
   currency: 'COP'
 };
@@ -47,10 +47,10 @@ const variantSizes = sizes => sizes.map(size=>({
 
 export const products=[
   {
-    id:'denim-01',slug:'ref-temporal-denim-01',name:'REF. TEMPORAL — DENIM 01',
-    subtitle:'Flared denim · nombre comercial pendiente',category:'Jeans',collections:['Denim','Drop 001'],
+    id:'denim-01',slug:'ref-temporal-denim-01',name:'DENIM 01',
+    subtitle:'Flared denim · Drop 001',category:'Jeans',collections:['Denim','Drop 001'],
     fit:'Flared Fit',color:'Blue',price:null,compareAtPrice:null,featured:true,bestSeller:true,newArrival:true,
-    description:'Producto real del cliente. Nombre, precio, SKU y stock final pendientes.',
+    description:'Denim de estructura sólida con silueta amplia y caída definida.',
     features:denimFeatures,
     media:[
       {type:'hero',src:driveImage(ids.denimDistressed),alt:'Jean denim distressed real del cliente'},
@@ -61,10 +61,10 @@ export const products=[
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'denim-02',slug:'ref-temporal-denim-02',name:'REF. TEMPORAL — DENIM 02',
-    subtitle:'Grey flared · datos comerciales pendientes',category:'Jeans',collections:['Denim','Drop 001'],
+    id:'denim-02',slug:'ref-temporal-denim-02',name:'DENIM 02',
+    subtitle:'Grey flared · Drop 001',category:'Jeans',collections:['Denim','Drop 001'],
     fit:'Flared Fit',color:'Grey',price:null,featured:true,bestSeller:false,newArrival:true,
-    description:'Fotografía real disponible. Información comercial pendiente de confirmación.',
+    description:'Denim gris de la selección actual.',
     features:denimFeatures,
     media:[
       {type:'hero',src:driveImage(ids.denimGrey),alt:'Jean gris flared real del cliente'},
@@ -74,10 +74,10 @@ export const products=[
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'tee-01',slug:'ref-temporal-tee-01',name:'REF. TEMPORAL — GRAPHIC TEE 01',
-    subtitle:'Graphic streetwear · referencia pendiente',category:'Streetwear',collections:['Graphic','Drop 001'],
+    id:'tee-01',slug:'ref-temporal-tee-01',name:'GRAPHIC TEE 01',
+    subtitle:'Graphic streetwear · Drop 001',category:'Streetwear',collections:['Graphic','Drop 001'],
     fit:'Oversized',color:'Multi',price:null,featured:true,bestSeller:true,newArrival:false,
-    description:'Fotografía real del inventario del cliente. Material, fit, tallaje y precio por confirmar.',
+    description:'Graphic streetwear de la selección actual.',
     features:[],
     media:[
       {type:'hero',src:driveImage(ids.tee1),alt:'Camisetas gráficas reales del cliente'},
@@ -88,30 +88,30 @@ export const products=[
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'set-01',slug:'ref-temporal-set-01',name:'REF. TEMPORAL — SET 01',
-    subtitle:'Technical black set · información pendiente',category:'Conjuntos',collections:['Technical'],
+    id:'set-01',slug:'ref-temporal-set-01',name:'TECHNICAL SET 01',
+    subtitle:'Technical black set · Drop 001',category:'Conjuntos',collections:['Technical'],
     fit:'Regular',color:'Black',price:null,featured:true,bestSeller:false,newArrival:true,
-    description:'Producto real fotografiado en tienda. Marca, materiales, talla, precio y stock pendientes.',
+    description:'Conjunto negro de la selección actual.',
     features:[],
     media:[{type:'hero',src:driveImage(ids.setBlack),alt:'Conjunto negro real del cliente'}],
     variants:variantSizes(['S','M','L','XL']),
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'perfume-01',slug:'ref-temporal-perfume-01',name:'REF. TEMPORAL — PERFUME 01',
-    subtitle:'Fragancia · ficha comercial pendiente',category:'Perfumes',collections:['Fragrance Edit'],
+    id:'perfume-01',slug:'ref-temporal-perfume-01',name:'FRAGRANCE 01',
+    subtitle:'Fragrance edit · Drop 001',category:'Perfumes',collections:['Fragrance Edit'],
     fit:null,color:'Pink',price:null,featured:true,bestSeller:true,newArrival:true,
-    description:'Fotografía real del cliente. Volumen, concentración, notas, precio y stock pendientes.',
+    description:'Fragancia de la selección actual.',
     features:[],
     media:[{type:'hero',src:driveImage(ids.perfume1),alt:'Perfume real del cliente en composición floral'}],
     variants:variantSizes(['Única']),
     shopifyMapping:{productId:null,handle:null}
   },
   {
-    id:'perfume-02',slug:'ref-temporal-perfume-02',name:'REF. TEMPORAL — PERFUME 02',
-    subtitle:'Fragancia · ficha comercial pendiente',category:'Perfumes',collections:['Fragrance Edit'],
+    id:'perfume-02',slug:'ref-temporal-perfume-02',name:'FRAGRANCE 02',
+    subtitle:'Fragrance edit · Drop 001',category:'Perfumes',collections:['Fragrance Edit'],
     fit:null,color:'Pink',price:null,featured:false,bestSeller:true,newArrival:false,
-    description:'Fotografía real del cliente. Se conserva la presentación existente sin inventar datos.',
+    description:'Fragancia de la selección actual.',
     features:[],
     media:[{type:'hero',src:driveImage(ids.perfume2),alt:'Perfume real del cliente sobre flores'}],
     variants:variantSizes(['Única']),
@@ -121,7 +121,7 @@ export const products=[
 
 export const home={
   heroHeadline:'WEAR THE\nATTITUDE.',
-  heroSubheadline:'Streetwear y fragancias reales del catálogo. Branding y datos comerciales finales pendientes.',
+  heroSubheadline:'Denim, streetwear y fragancias en una selección visual construida alrededor del producto.',
   heroProductId:'denim-01',
   bestSellerIds:['denim-01','tee-01','perfume-01','perfume-02']
 };
