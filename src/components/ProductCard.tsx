@@ -6,7 +6,7 @@ import { useCommerce } from '../commerce/CommerceProvider'
 import { useUI } from '../context/UIContext'
 import { ImageWithFallback } from './ImageWithFallback'
 
-export function ProductCard({product,index=0,className=''}:{product:Product;index?:number;className?:string}){
+export function ProductCard({product,index=0,className='',eager=false}:{product:Product;index?:number;className?:string;eager?:boolean}){
   const commerce=useCommerce();const ui=useUI();const [open,setOpen]=useState(false);const [variantId,setVariantId]=useState<string|null>(null)
   const hero=product.media[0]?.publicUrl;const second=product.media[1]?.publicUrl||hero
   const badges=[product.newArrival?'NUEVO':'',product.bestSeller?'DESTACADO':''].filter(Boolean)
@@ -20,8 +20,8 @@ export function ProductCard({product,index=0,className=''}:{product:Product;inde
   }
   return <article className={'card '+(index%2?'offset ':'')+className} data-reveal="card" style={{'--i':index%4} as React.CSSProperties}>
     <Link className="media" to={'/product/'+product.slug} data-cursor="VER" aria-label={'Ver '+product.name}>
-      <ImageWithFallback src={hero} alt={product.media[0]?.alt||product.name} loading="lazy" decoding="async"/>
-      {second&&second!==hero&&<ImageWithFallback className="secondary" src={second} alt="" loading="lazy" decoding="async"/>}
+      <ImageWithFallback src={hero} alt={product.media[0]?.alt||product.name} loading={eager?'eager':'lazy'} fetchPriority={eager?'high':undefined} decoding="async"/>
+      {second&&second!==hero&&<ImageWithFallback className="secondary" src={second} alt="" loading={eager?'eager':'lazy'} decoding="async"/>}
       <span className="index">{pad(index+1)}</span><div className="badges">{badges.map(b=><span key={b}>{b}</span>)}</div><span className="focus">VER</span>
     </Link>
     <div className="meta"><div><Link to={'/product/'+product.slug} data-cursor="VER"><h3>{product.name}</h3></Link><p>{product.fit||product.subtitle}</p></div><b>{money(product.price)}</b></div>
