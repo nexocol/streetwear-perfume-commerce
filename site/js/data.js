@@ -1,7 +1,7 @@
 export const brand = {
-  name: 'BRAND / STORE',
-  mark: '',
-  season: 'DROP / 2026',
+  name: '',
+  placeholder: '[ BRAND ]',
+  season: 'STORE / 001',
   currency: 'COP'
 };
 
@@ -123,5 +123,9 @@ export const home={
   heroHeadline:'WEAR THE\nATTITUDE.',
   heroSubheadline:'Denim, streetwear y fragancias en una selección visual construida alrededor del producto.',
   heroProductId:'denim-01',
-  bestSellerIds:['denim-01','tee-01','perfume-01','perfume-02']
+  heroSecondaryProductId:'denim-02',
+  featuredIds:['denim-01','tee-01','denim-02','set-01'],
+  fragrancePrimaryId:'perfume-01',
+  fragranceSecondaryId:'perfume-02',
+  editorialProductId:'tee-01'
 };
