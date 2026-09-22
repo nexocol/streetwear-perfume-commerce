@@ -1,8 +1,6 @@
 export const SCHEMA_VERSION=1
 
 export const SCHEMA_SQL=String.raw`
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS schema_migrations(
   version INTEGER PRIMARY KEY,
   applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
