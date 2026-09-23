@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchCatalog, saveHomepage, uploadHomepageEditorialImage } from '../lib/catalogRepository'
 import type { CatalogSnapshot, HomepageSettings, Product } from '../types'
 import { ImageWithFallback } from '../components/ImageWithFallback'
+import { clientHomeHeadline, clientHomeSubheadline, displayCategory, displayProductName, productStyle } from '../lib/clientContent'
 
 type SaveState='idle'|'dirty'|'saving'|'saved'|'error'
 
 function ProductPicker({label,value,products,onChange}:{label:string;value:string|null;products:Product[];onChange:(id:string|null)=>void}){
   const selected=products.find(p=>p.id===value)
-  return <label className="product-picker"><span>{label}</span><div className="product-picker-card">{selected?<><ImageWithFallback src={selected.media[0]?.publicUrl} alt={selected.name}/><div><b>{selected.name}</b><small>{selected.category}{selected.fit?' / '+selected.fit:''}</small></div></>:<div className="product-picker-empty">SIN SELECCIÓN</div>}<select value={value||''} onChange={e=>onChange(e.target.value||null)}><option value="">Sin selección</option>{products.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div></label>
+  return <label className="product-picker"><span>{label}</span><div className="product-picker-card">{selected?<><ImageWithFallback src={selected.media[0]?.publicUrl} alt={displayProductName(selected)}/><div><b>{displayProductName(selected)}</b><small>{displayCategory(selected.category)}{productStyle(selected)?' / '+productStyle(selected):''}</small></div></>:<div className="product-picker-empty">SIN SELECCIÓN</div>}<select value={value||''} onChange={e=>onChange(e.target.value||null)}><option value="">Sin selección</option>{products.map(p=><option key={p.id} value={p.id}>{displayProductName(p)}</option>)}</select></div></label>
 }
 
 export function AdminHomePage(){
@@ -19,7 +20,7 @@ export function AdminHomePage(){
   const [uploading,setUploading]=useState(false)
   const fileRef=useRef<HTMLInputElement>(null)
 
-  useEffect(()=>{fetchCatalog(true).then(c=>{setCatalog(c);setHome(c.homepage);setBaseline(JSON.stringify(c.homepage))}).catch(e=>{setMessage(e.message);setSaveState('error')})},[])
+  useEffect(()=>{fetchCatalog(true).then(c=>{const next={...c.homepage,heroHeadline:clientHomeHeadline(c.homepage.heroHeadline),heroSubheadline:clientHomeSubheadline(c.homepage.heroSubheadline)};setCatalog(c);setHome(next);setBaseline(JSON.stringify(next))}).catch(e=>{setMessage(e.message);setSaveState('error')})},[])
   const active=useMemo(()=>catalog?.products.filter(p=>p.status!=='archived')||[],[catalog])
   const selectedFeatured=useMemo(()=>home?home.featuredProductIds.map(id=>active.find(p=>p.id===id)).filter(Boolean).slice(0,4) as Product[]:[],[home,active])
   const dirty=home?JSON.stringify(home)!==baseline:false
@@ -62,8 +63,8 @@ export function AdminHomePage(){
     </section>
 
     <section className="admin-section"><div className="section-head"><div><span>04</span><h2>PRODUCTOS DESTACADOS</h2></div><small>Máximo 4 · el orden se refleja en Home</small></div>
-      <div className="featured-order">{selectedFeatured.map((p,i)=><article key={p.id}><span className="featured-number">{i+1}</span><ImageWithFallback src={p.media[0]?.publicUrl} alt={p.name}/><div><b>{p.name}</b><small>{p.category} / {p.fit||'—'}</small></div><div className="order-actions"><button disabled={i===0} onClick={()=>moveFeatured(i,-1)} aria-label={'Subir '+p.name}>↑</button><button disabled={i===selectedFeatured.length-1} onClick={()=>moveFeatured(i,1)} aria-label={'Bajar '+p.name}>↓</button><button onClick={()=>removeFeatured(p.id)}>QUITAR</button></div></article>)}</div>
-      {selectedFeatured.length<4&&<label className="add-featured">Agregar producto<select defaultValue="" onChange={e=>{addFeatured(e.target.value);e.currentTarget.value=''}}><option value="">Seleccionar…</option>{availableForFeatured.map(p=><option value={p.id} key={p.id}>{p.name}</option>)}</select></label>}
+      <div className="featured-order">{selectedFeatured.map((p,i)=><article key={p.id}><span className="featured-number">{i+1}</span><ImageWithFallback src={p.media[0]?.publicUrl} alt={p.name}/><div><b>{displayProductName(p)}</b><small>{displayCategory(p.category)} / {productStyle(p)||'—'}</small></div><div className="order-actions"><button disabled={i===0} onClick={()=>moveFeatured(i,-1)} aria-label={'Subir '+p.name}>↑</button><button disabled={i===selectedFeatured.length-1} onClick={()=>moveFeatured(i,1)} aria-label={'Bajar '+p.name}>↓</button><button onClick={()=>removeFeatured(p.id)}>QUITAR</button></div></article>)}</div>
+      {selectedFeatured.length<4&&<label className="add-featured">Agregar producto<select defaultValue="" onChange={e=>{addFeatured(e.target.value);e.currentTarget.value=''}}><option value="">Seleccionar…</option>{availableForFeatured.map(p=><option value={p.id} key={p.id}>{displayProductName(p)}</option>)}</select></label>}
     </section>
 
     <div className={'admin-savebar '+(dirty?'visible':'')}><span>{saveState==='saving'?'Guardando cambios…':saveState==='saved'?'Guardado ✓':'Cambios sin guardar'}</span><button className="btn dark" disabled={!dirty||saveState==='saving'} onClick={save}>{saveState==='saving'?'GUARDANDO…':'GUARDAR CAMBIOS'}</button></div>
