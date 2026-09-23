@@ -4,16 +4,18 @@ import { useCatalog } from '../context/CatalogContext'
 import { ProductGrid } from '../components/ProductGrid'
 import { FilterPanel } from '../components/FilterPanel'
 import { TrustRail } from '../components/TrustRail'
-import { displayCategory, displayProductDescription, displayProductName, productStyle } from '../lib/clientContent'
+import { activeCatalogCategories, displayCategory, displayProductDescription, displayProductName, productStyle } from '../lib/clientContent'
 
 export function ShopPage(){
   const {catalog}=useCatalog();const [params,setParams]=useSearchParams();const [filtersOpen,setFiltersOpen]=useState(false)
   if(!catalog)return null
   const filters={cat:params.get('cat')||'Todos',size:params.get('size')||'',fit:params.get('fit')||'',sort:params.get('sort')||'featured'}
   const q=(params.get('q')||'').trim().toLowerCase()
-  const sizes=[...new Set(catalog.products.flatMap(p=>p.variants.map(v=>v.size)).filter(s=>s!=='Única'))]
-  const styles=[...new Set(catalog.products.flatMap(p=>[productStyle(p),p.fit]).filter(Boolean) as string[])]
-  let list=[...catalog.products]
+  const visibleProducts=catalog.products.filter(p=>p.status==='active')
+  const activeCategories=activeCatalogCategories(catalog)
+  const sizes=[...new Set(visibleProducts.flatMap(p=>p.variants.map(v=>v.size)).filter(s=>s!=='Única'))]
+  const styles=[...new Set(visibleProducts.flatMap(p=>[productStyle(p),p.fit]).filter(Boolean) as string[])]
+  let list=[...visibleProducts]
   if(filters.cat!=='Todos')list=list.filter(p=>p.category===filters.cat)
   if(filters.size)list=list.filter(p=>p.variants.some(v=>v.size===filters.size))
   if(filters.fit)list=list.filter(p=>productStyle(p)===filters.fit||p.fit===filters.fit)
@@ -26,6 +28,6 @@ export function ShopPage(){
   function clear(){setParams({}, {replace:true})}
   return <main id="main"><section className="shop-hero"><span>TIENDA / CATÁLOGO</span><h1><span className="hero-line"><span>TODOS LOS</span></span><br/><span className="hero-line"><span>PRODUCTOS</span></span></h1><p>{list.length} PRODUCTOS{q?' / “'+params.get('q')+'”':''}</p></section>
     <div className="shop-toolbar"><button className="filter-trigger" onClick={()=>setFiltersOpen(true)} aria-expanded={filtersOpen}><span>FILTRAR / ORDENAR</span><b>{active?'('+active+')':'+'}</b></button><span>{filters.cat==='Todos'?'TODAS LAS CATEGORÍAS':displayCategory(filters.cat).toUpperCase()}</span></div>
-    <FilterPanel open={filtersOpen} filters={filters} categories={catalog.categories} sizes={sizes} styles={styles} count={list.length} onChange={change} onClear={clear} onClose={()=>setFiltersOpen(false)}/>
+    <FilterPanel open={filtersOpen} filters={filters} categories={activeCategories} sizes={sizes} styles={styles} count={list.length} onChange={change} onClear={clear} onClose={()=>setFiltersOpen(false)}/>
     <section className="catalog"><ProductGrid products={list} className="catalog-grid"/></section><TrustRail/></main>
 }
