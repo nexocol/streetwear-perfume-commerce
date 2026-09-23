@@ -1,13 +1,13 @@
 import { test, expect, type Page, type Route } from '@playwright/test'
 import { seedCatalog } from '../src/data/seed'
 
-async function mockApi(page:Page){
+async function mockApi(page:Page,catalog=seedCatalog){
   await page.route('**/api/**',async(route:Route)=>{
     const req=route.request();const path=new URL(req.url()).pathname
-    if(path==='/api/catalog')return route.fulfill({json:seedCatalog})
+    if(path==='/api/catalog')return route.fulfill({json:catalog})
     if(path==='/api/admin/session')return route.fulfill({json:{email:'qa@nexo.local'}})
-    if(path==='/api/admin/catalog')return route.fulfill({json:seedCatalog})
-    if(path==='/api/admin/home/editorial-image')return route.fulfill({status:201,json:{url:seedCatalog.homepage.editorialImageUrl}})
+    if(path==='/api/admin/catalog')return route.fulfill({json:catalog})
+    if(path==='/api/admin/home/editorial-image')return route.fulfill({status:201,json:{url:catalog.homepage.editorialImageUrl}})
     if(path==='/api/admin/home'||path==='/api/admin/settings'||path.startsWith('/api/admin/taxonomy/'))return route.fulfill({json:{ok:true}})
     if(path.includes('/duplicate'))return route.fulfill({json:{id:'qa-copy-id'}})
     if(path.endsWith('/status'))return route.fulfill({json:{ok:true}})
@@ -18,8 +18,27 @@ async function mockApi(page:Page){
 }
 async function waitReady(page:Page){await expect(page.locator('.hero,.shop-hero,.pdp,.admin-page').first()).toBeVisible()}
 async function settle(page:Page){
-  await page.evaluate(async()=>{const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));for(let y=0;y<document.documentElement.scrollHeight;y+=Math.max(300,innerHeight*.6)){scrollTo(0,y);await sleep(70)}document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible'));scrollTo(0,0)})
-  await page.waitForTimeout(250)
+  await page.evaluate(async()=>{
+    const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms))
+    const step=Math.max(280,Math.floor(innerHeight*.55))
+    for(let y=0;y<=document.documentElement.scrollHeight-innerHeight;y+=step){scrollTo(0,y);await sleep(120)}
+    scrollTo(0,document.documentElement.scrollHeight);await sleep(320)
+    document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible'))
+  })
+  await page.waitForFunction(()=>{
+    const imgs=[...document.querySelectorAll<HTMLImageElement>('main img,.footer img')]
+    return imgs.every(img=>img.complete)
+  },null,{timeout:12_000})
+  const media=await page.evaluate(()=>{
+    const imgs=[...document.querySelectorAll<HTMLImageElement>('main img,.footer img')]
+    const broken=imgs.filter(img=>!img.complete||img.naturalWidth<=0).map(img=>({src:img.currentSrc||img.src,naturalWidth:img.naturalWidth,alt:img.alt}))
+    const fallbacks=[...document.querySelectorAll<HTMLElement>('.image-fallback[data-image-fallback="error"]')].map(el=>({src:el.dataset.failedSrc||'',label:el.getAttribute('aria-label')||''}))
+    return {total:imgs.length,broken,fallbacks}
+  })
+  expect(media.broken,'V4.3 broken media').toEqual([])
+  expect(media.fallbacks,'V4.3 unexpected image fallbacks').toEqual([])
+  console.log('V43_MEDIA_QA '+JSON.stringify({url:page.url(),total:media.total,broken:media.broken.length,fallbacks:media.fallbacks.length}))
+  await page.evaluate(()=>scrollTo(0,0));await page.waitForTimeout(250)
 }
 async function expectSafe(page:Page){
   const root=await page.evaluate(()=>({sw:document.documentElement.scrollWidth,iw:innerWidth,x:scrollX}));expect(root.sw).toBeLessThanOrEqual(root.iw+1)
@@ -45,6 +64,26 @@ test('V4.3 catalog content and buyer journey',async({page})=>{
   await expect(page.locator('.pdp-info summary').filter({hasText:'ENVÍOS Y MÉTODOS DE PAGO'})).toBeVisible()
 })
 
+
+test('V4.3 Sudaderas category is data driven and empty categories stay hidden',async({page})=>{
+  await mockApi(page);await page.goto('/');await waitReady(page)
+  await expect(page.locator('.collection-links a',{hasText:'SUDADERAS'})).toHaveCount(0)
+  await page.goto('/shop');await page.getByRole('button',{name:/FILTRAR \/ ORDENAR/}).click()
+  await expect(page.getByRole('button',{name:'Sudaderas',exact:true})).toHaveCount(0)
+
+  const base=structuredClone(seedCatalog)
+  const source=base.products.find(p=>p.id==='tee-01')!
+  const hoodie={...source,id:'hoodie-proof',slug:'sudadera-proof',name:'Sudadera — marca por confirmar',nameStatus:'provisional',categoryId:'cat-hoodies',category:'Sudaderas',status:'active' as const,sortOrder:99,variants:source.variants.map((v,i)=>({...v,id:'hoodie-proof-'+i,productId:'hoodie-proof'})),media:source.media.map((m,i)=>({...m,id:'hoodie-proof-media-'+i,productId:'hoodie-proof'}))}
+  const withHoodie={...base,products:[...base.products,hoodie]}
+  await page.unroute('**/api/**');await mockApi(page,withHoodie)
+  await page.goto('/');await waitReady(page)
+  await expect(page.locator('.collection-links a',{hasText:'SUDADERAS'})).toHaveCount(1)
+  await expect(page.locator('.collection-links a')).toHaveCount(5)
+  await expectSafe(page)
+  await page.goto('/shop');await page.getByRole('button',{name:/FILTRAR \/ ORDENAR/}).click()
+  await expect(page.getByRole('button',{name:'Sudaderas',exact:true})).toBeVisible()
+})
+
 test('V4.3 perfume info structure',async({page})=>{
   await mockApi(page);await page.goto('/product/'+seedCatalog.products.find(p=>p.category==='Perfumes')!.slug);await waitReady(page);await assertNoLegacyNames(page)
   await expect(page.getByText('COMPOSICIÓN / NOTAS')).toBeVisible()
@@ -65,7 +104,7 @@ test('V4.3 exact shipping and payment terms',async({page})=>{
 
 test('V4.3 CMS remains editable without infrastructure changes',async({page})=>{
   await mockApi(page);await page.goto('/admin/products/'+seedCatalog.products[0].id);await waitReady(page)
-  await expect(page.getByLabel('Nombre')).toHaveValue('Pantalón — referencia por confirmar')
+  await expect(page.getByLabel('Nombre')).toHaveValue('Pantalón Rotos')
   await expect(page.getByLabel('Descripción breve')).toBeVisible()
   await expect(page.getByLabel('Categoría')).toBeVisible()
   await expect(page.getByLabel('Estilo / subtipo')).toBeVisible()
