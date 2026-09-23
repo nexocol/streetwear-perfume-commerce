@@ -70,7 +70,7 @@ test('V4 storefront critical journey',async({page})=>{
   await page.getByRole('link',{name:'VER LA COLECCIÓN'}).click()
   await expect(page.locator('.shop-hero')).toBeVisible()
   await page.getByRole('button',{name:/FILTRAR/}).click()
-  await page.getByRole('button',{name:'Jeans',exact:true}).click()
+  await page.getByRole('button',{name:'Pantalones',exact:true}).click()
   await page.getByRole('button',{name:/VER 2 PRODUCTOS/}).click()
   await expect(page.locator('.catalog .card')).toHaveCount(2)
   await page.locator('.catalog .media').first().click()
