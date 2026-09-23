@@ -1,0 +1,29 @@
+name: V4.3 Client Content QA
+on:
+  push:
+    branches: [v4.3-client-content-round]
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npm install
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build
+        run: npm run build
+      - name: Smoke
+        run: npm test
+      - name: V4.3 Playwright QA
+        run: npx playwright test tests/v43.spec.ts
+      - name: Upload V4.3 screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v4-3-client-content-screenshots
+          path: qa-v43/
+          if-no-files-found: warn
