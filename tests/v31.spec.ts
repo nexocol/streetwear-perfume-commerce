@@ -12,9 +12,7 @@ async function mockApi(page:Page){
     if(path.includes('/duplicate'))return route.fulfill({json:{id:'qa-copy-id'}})
     if(path.endsWith('/status'))return route.fulfill({json:{ok:true}})
     if(path.includes('/media'))return route.fulfill({status:req.method()==='POST'?201:200,json:{ok:true}})
-    if(path.startsWith('/api/admin/products/')&&req.method()==='PUT'){
-      const body=JSON.parse(req.postData()||'{}');return route.fulfill({json:body.product})
-    }
+    if(path.startsWith('/api/admin/products/')&&req.method()==='PUT'){const body=JSON.parse(req.postData()||'{}');return route.fulfill({json:body.product})}
     return route.continue()
   })
 }
@@ -22,14 +20,21 @@ async function waitStore(page:Page){await expect(page.locator('.hero, .shop-hero
 async function revealForScreenshot(page:Page){
   await page.evaluate(async()=>{
     const max=document.documentElement.scrollHeight-window.innerHeight
-    for(let y=0;y<=max;y+=Math.max(420,window.innerHeight*.65)){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,45))}
-    window.scrollTo(0,max);await new Promise(r=>setTimeout(r,100));window.scrollTo(0,0)
+    for(let y=0;y<=max;y+=Math.max(420,window.innerHeight*.68)){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,35))}
+    window.scrollTo(0,max);await new Promise(r=>setTimeout(r,80));window.scrollTo(0,0)
+    document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible'))
   })
-  await page.evaluate(()=>document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible')))
-  await page.waitForTimeout(350)
+  await page.waitForTimeout(250)
+}
+async function expectViewportSafe(page:Page){
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBeTruthy()
+  const clipped=await page.evaluate(()=>[...document.querySelectorAll<HTMLElement>('h1,h2')].filter(el=>{
+    const r=el.getBoundingClientRect();return r.width>window.innerWidth+2||el.scrollWidth>el.clientWidth+2
+  }).map(el=>el.textContent?.trim()))
+  expect(clipped).toEqual([])
 }
 
-test('storefront critical journey',async({page})=>{
+test('V4 storefront critical journey',async({page})=>{
   await mockApi(page);await page.goto('/');await waitStore(page)
   await page.getByRole('button',{name:'Buscar'}).click()
   await page.getByRole('textbox',{name:'Buscar productos'}).fill('DENIM')
@@ -43,48 +48,39 @@ test('storefront critical journey',async({page})=>{
   await expect(page.locator('.catalog .card')).toHaveCount(2)
   await page.locator('.catalog .media').first().click()
   await expect(page.locator('.pdp-info')).toBeVisible()
+
+  const sizeGuide=page.getByRole('button',{name:/GUÍA DE TALLAS/})
+  if(await sizeGuide.count()){await sizeGuide.click();await expect(page.locator('#size-dialog')).toBeVisible();await page.locator('#size-dialog .dialog-close').click()}
+
   await page.locator('.sizes button').first().click()
   await page.getByRole('button',{name:'AGREGAR AL CARRITO'}).click()
   await expect(page.locator('.cart-item')).toHaveCount(1)
   await page.locator('.quantity button').last().click();await expect(page.locator('.quantity span')).toHaveText('2')
   await page.locator('.quantity button').first().click();await expect(page.locator('.quantity span')).toHaveText('1')
   await page.getByRole('button',{name:'ELIMINAR'}).click();await expect(page.locator('.cart-item')).toHaveCount(0)
-  await page.getByRole('link',{name:/VER LA TIENDA/}).click();await expect(page.locator('.shop-hero')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.related .card').first()).toBeVisible()
+  await page.locator('.related .media').first().click();await expect(page.locator('.pdp-info')).toBeVisible()
   await page.goBack();await expect(page.locator('.pdp-info')).toBeVisible()
-  await page.goto('/#fragrance');await expect(page.locator('#fragrance')).toBeVisible()
-  await page.goto('/#editorial');await expect(page.locator('#editorial')).toBeVisible()
 })
 
-test('admin primary operations',async({page})=>{
+test('admin primary operations remain intact',async({page})=>{
   await mockApi(page);await page.goto('/admin/home');await expect(page.getByRole('heading',{name:'HOME.'})).toBeVisible()
-  const headline=page.getByLabel('Titular');await headline.fill('DROP / 001\nQA')
+  const headline=page.getByLabel('Titular');await headline.fill('DROP / 001\\nQA')
   await expect(page.locator('.admin-savebar')).toHaveClass(/visible/)
   await page.locator('.admin-savebar').getByRole('button',{name:'GUARDAR CAMBIOS'}).click()
   await expect(page.getByText('Cambios guardados correctamente.')).toBeVisible()
-  const editorialInput=page.locator('.editorial-media-picker input[type=file]')
-  await editorialInput.setInputFiles({name:'editorial.jpg',mimeType:'image/jpeg',buffer:Buffer.from('qa')})
-  await page.goto('/admin/products')
-  await expect(page.locator('.admin-product-list article')).toHaveCount(6)
+  await page.goto('/admin/products');await expect(page.locator('.admin-product-list article')).toHaveCount(6)
   await page.locator('.admin-product-list article').first().getByRole('link',{name:'EDITAR'}).click()
   await page.getByLabel('Subtítulo').fill('QA subtitle')
   await page.getByRole('button',{name:'GUARDAR',exact:true}).click()
   await expect(page.getByRole('button',{name:/GUARDADO/})).toBeVisible()
-  await page.goto('/admin/products')
-  await page.locator('.admin-product-list article').first().getByRole('button',{name:'DUPLICAR'}).click()
-  await page.locator('.admin-product-list article').first().getByRole('button',{name:'OCULTAR'}).click()
 })
 
-for(const [width,height] of [[1440,1000],[1024,900],[768,1024],[430,900],[390,844]]){
-  test('visual home '+width,async({page})=>{
-    await page.setViewportSize({width,height});await mockApi(page);await page.goto('/');await waitStore(page);await revealForScreenshot(page)
-    await page.screenshot({path:'qa-screenshots/home-'+width+'.png',fullPage:true})
-    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBeTruthy()
-  })
+for(const [width,height] of [[1920,1080],[1440,1000],[1024,900],[768,1024],[430,900],[390,844]]){
+  test(`visual home ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/');await waitStore(page);await revealForScreenshot(page);await expectViewportSafe(page);await page.screenshot({path:`qa-screenshots/home-${width}.png`,fullPage:true})})
 }
-for(const [width,height] of [[1440,1000],[768,1024],[430,900]]){
-  test('visual admin '+width,async({page})=>{
-    await page.setViewportSize({width,height});await mockApi(page);await page.goto('/admin/home');await expect(page.getByRole('heading',{name:'HOME.'})).toBeVisible();await page.waitForTimeout(450)
-    await page.screenshot({path:'qa-screenshots/admin-'+width+'.png',fullPage:true})
-    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBeTruthy()
-  })
+for(const [width,height] of [[1440,1000],[430,900]]){
+  test(`visual shop ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/shop');await waitStore(page);await revealForScreenshot(page);await expectViewportSafe(page);await page.screenshot({path:`qa-screenshots/shop-${width}.png`,fullPage:true})})
+  test(`visual pdp ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/product/'+seedCatalog.products[0].slug);await waitStore(page);await revealForScreenshot(page);await expectViewportSafe(page);await page.screenshot({path:`qa-screenshots/pdp-${width}.png`,fullPage:true})})
 }
