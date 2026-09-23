@@ -27,8 +27,8 @@ async function revealForScreenshot(page:Page){
   await page.waitForTimeout(250)
 }
 async function expectViewportSafe(page:Page){
-  const overflow=await page.evaluate(()=>{const w=innerWidth;return [...document.querySelectorAll<HTMLElement>('main *,.footer *')].filter(el=>{const s=getComputedStyle(el);const r=el.getBoundingClientRect();return el.getClientRects().length>0&&s.display!=='none'&&s.visibility!=='hidden'&&!el.closest('dialog:not([open])')&&(r.left < -1 || r.right>w+1)&&!el.closest('.ticker,.featured-rail,.gallery')}).slice(0,10).map(el=>({el:el.className||el.tagName,left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right),text:(el.textContent||'').trim().slice(0,40)}))});expect(overflow).toEqual([])
-  const clipped=await page.evaluate(()=>[...document.querySelectorAll<HTMLElement>('h1,h2')].filter(el=>{
+  const overflow=await page.evaluate(()=>{const w=innerWidth;return [...document.querySelectorAll<HTMLElement>('main *,.footer *')].filter(el=>{const s=getComputedStyle(el);const r=el.getBoundingClientRect();return el.getClientRects().length>0&&s.display!=='none'&&s.visibility!=='hidden'&&!el.closest('dialog:not([open])')&&el.tagName!=='BR'&&(r.left < -1 || r.right>w+1)&&!el.closest('.ticker,.featured-rail,.gallery')}).slice(0,10).map(el=>({el:el.className||el.tagName,left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right),text:(el.textContent||'').trim().slice(0,40)}))});expect(overflow).toEqual([])
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBeTruthy();const clipped=await page.evaluate(()=>[...document.querySelectorAll<HTMLElement>('h1,h2')].filter(el=>{
     const r=document.createRange();r.selectNodeContents(el);const b=r.getBoundingClientRect();return b.left < -1 || b.right > window.innerWidth+1
   }).map(el=>el.textContent?.trim()))
   expect(clipped).toEqual([])
