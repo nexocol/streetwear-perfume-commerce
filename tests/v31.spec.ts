@@ -32,6 +32,12 @@ async function prepareVisualEvidence(page:Page){
     }
     window.scrollTo(0,document.documentElement.scrollHeight)
     await sleep(320)
+    for(const rail of document.querySelectorAll<HTMLElement>('.featured-rail,.gallery')){
+      const max=Math.max(0,rail.scrollWidth-rail.clientWidth)
+      const railStep=Math.max(180,Math.floor(rail.clientWidth*.6))
+      for(let x=0;x<=max;x+=railStep){rail.scrollTo({left:x,behavior:'auto'});await sleep(120)}
+      rail.scrollTo({left:max,behavior:'auto'});await sleep(180);rail.scrollTo({left:0,behavior:'auto'})
+    }
     document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible'))
   })
   await page.waitForFunction((selector)=>{
