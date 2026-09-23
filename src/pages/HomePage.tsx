@@ -72,7 +72,7 @@ export function HomePage(){
 
     {editorial&&<section id="editorial" className="editorial" aria-labelledby="editorial-title">
       <div className="editorial-meta"><span>05 / LOOKBOOK</span><span>CAMPAIGN / 001</span></div>
-      <div className="editorial-image" data-reveal="image"><ImageWithFallback src={cfg.editorialImageUrl||editorial.media[0]?.publicUrl} alt="Selección editorial de prendas reales del catálogo" loading="lazy"/></div>
+      <div className="editorial-image" data-reveal="image"><ImageWithFallback src={editorial.media[0]?.publicUrl||cfg.editorialImageUrl} alt="Selección editorial de prendas reales del catálogo" loading="lazy"/></div>
       <div className="editorial-copy" data-reveal="mask"><h2 id="editorial-title">LLEVA<br/>EL DROP<br/><i>AFUERA.</i></h2><p>Una lectura más editorial de la selección: proporción, textura y actitud sin alejarse de lo que realmente puedes comprar.</p><Link to="/shop" className="text-action">VER TIENDA ↗</Link></div>
       <span className="editorial-product-label">{editorial.name}</span>
     </section>}
