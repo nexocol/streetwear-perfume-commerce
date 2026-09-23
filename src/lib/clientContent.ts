@@ -69,12 +69,13 @@ export function displayProductDescription(product:Product){
 }
 
 export function displayProductFeatures(product:Product){
-  if(!legacyName.test(product.name))return product.features
+  const oldSeedCopy=product.features.some(f=>/Streetwear premium|Denim de estructura sólida|Corte Flared Fit con pierna acampanada/i.test(f))
+  if(!legacyName.test(product.name)&&!oldSeedCopy)return product.features
   const style=productStyle(product)
   if(product.category==='Jeans')return [product.fit?'Corte '+product.fit+'.':null,style?'Estilo / acabado: '+style+'.':null].filter(Boolean) as string[]
   if(product.category==='Streetwear')return [product.fit?'Fit '+product.fit+'.':null,'Camiseta gráfica.'].filter(Boolean) as string[]
   if(product.category==='Conjuntos')return [product.fit?'Fit '+product.fit+'.':null,product.color?'Color '+product.color+'.':null].filter(Boolean) as string[]
-  return []
+  return product.features
 }
 
 export function normalizeLegacyProduct(product:Product):Product{
