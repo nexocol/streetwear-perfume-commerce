@@ -27,7 +27,7 @@ async function revealForScreenshot(page:Page){
   await page.waitForTimeout(250)
 }
 async function expectViewportSafe(page:Page){
-  const overflow=await page.evaluate(()=>{const w=innerWidth;return [...document.querySelectorAll<HTMLElement>('main *,footer *')].filter(el=>{const s=getComputedStyle(el);const r=el.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&(r.left < -1 || r.right>w+1)&&!el.closest('.ticker,.featured-rail,.gallery')}).slice(0,10).map(el=>el.className||el.tagName)});expect(overflow).toEqual([])
+  const overflow=await page.evaluate(()=>{const w=innerWidth;return [...document.querySelectorAll<HTMLElement>('main *,footer *')].filter(el=>{const s=getComputedStyle(el);const r=el.getBoundingClientRect();return el.getClientRects().length>0&&s.display!=='none'&&s.visibility!=='hidden'&&!el.closest('dialog:not([open])')&&(r.left < -1 || r.right>w+1)&&!el.closest('.ticker,.featured-rail,.gallery')}).slice(0,10).map(el=>({el:el.className||el.tagName,left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right),text:(el.textContent||'').trim().slice(0,40)}))});expect(overflow).toEqual([])
   const clipped=await page.evaluate(()=>[...document.querySelectorAll<HTMLElement>('h1,h2')].filter(el=>{
     const r=document.createRange();r.selectNodeContents(el);const b=r.getBoundingClientRect();return b.left < -1 || b.right > window.innerWidth+1
   }).map(el=>el.textContent?.trim()))
@@ -78,9 +78,9 @@ test('admin primary operations remain intact',async({page})=>{
 })
 
 for(const [width,height] of [[1920,1080],[1440,1000],[1024,900],[768,1024],[430,900],[390,844]]){
-  test(`visual home ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/');await waitStore(page);await revealForScreenshot(page);await expectViewportSafe(page);await page.screenshot({path:`qa-screenshots/home-${width}.png`,fullPage:true})})
+  test(`visual home ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/');await waitStore(page);await revealForScreenshot(page);await page.screenshot({path:`qa-screenshots/home-${width}.png`,fullPage:true});await expectViewportSafe(page)})
 }
 for(const [width,height] of [[1440,1000],[430,900]]){
-  test(`visual shop ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/shop');await waitStore(page);await revealForScreenshot(page);await expectViewportSafe(page);await page.screenshot({path:`qa-screenshots/shop-${width}.png`,fullPage:true})})
-  test(`visual pdp ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/product/'+seedCatalog.products[0].slug);await waitStore(page);await revealForScreenshot(page);await expectViewportSafe(page);await page.screenshot({path:`qa-screenshots/pdp-${width}.png`,fullPage:true})})
+  test(`visual shop ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/shop');await waitStore(page);await revealForScreenshot(page);await page.screenshot({path:`qa-screenshots/shop-${width}.png`,fullPage:true});await expectViewportSafe(page)})
+  test(`visual pdp ${width}`,async({page})=>{await page.setViewportSize({width,height});await mockApi(page);await page.goto('/product/'+seedCatalog.products[0].slug);await waitStore(page);await revealForScreenshot(page);await page.screenshot({path:`qa-screenshots/pdp-${width}.png`,fullPage:true});await expectViewportSafe(page)})
 }
