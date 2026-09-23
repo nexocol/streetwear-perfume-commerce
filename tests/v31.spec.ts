@@ -47,6 +47,7 @@ async function prepareVisualEvidence(page:Page){
   expect(report.total,'Expected catalog media elements in visual QA').toBeGreaterThan(0)
   expect(report.broken,'Unresolved or broken catalog <img> media').toEqual([])
   expect(report.fallbacks,'Catalog media fell back after a real image error or missing media').toEqual([])
+  console.log('MEDIA_QA '+JSON.stringify({url:page.url(),total:report.total,broken:report.broken.length,fallbacks:report.fallbacks.length}))
   await page.evaluate(()=>window.scrollTo(0,0))
   await page.waitForTimeout(250)
   return report
@@ -115,11 +116,12 @@ for(const [width,height] of [[430,900],[390,844]]){
   test(`visual shop filters open ${width}`,async({page})=>{
     await page.setViewportSize({width,height});await mockApi(page);await page.goto('/shop');await waitStore(page)
     await page.getByRole('button',{name:/FILTRAR \/ ORDENAR/}).click()
+    await page.waitForTimeout(320)
     const panel=page.locator('.filter-panel')
     await expect(panel).toHaveClass(/open/)
     const clear=page.getByRole('button',{name:'LIMPIAR',exact:true})
     const apply=page.getByRole('button',{name:/VER \d+ PRODUCTOS/})
-    await expect(clear).toBeVisible();await expect(apply).toBeVisible()
+    await expect(clear).toBeVisible();await expect(apply).toBeVisible();await expect(clear).toBeInViewport();await expect(apply).toBeInViewport()
     const computed=await page.locator('.filter-actions').evaluate(el=>{
       const parent=getComputedStyle(el)
       const buttons=[...el.querySelectorAll<HTMLButtonElement>('button')].map(button=>{
@@ -142,5 +144,6 @@ for(const [width,height] of [[430,900],[390,844]]){
       expect(button.color).not.toBe('rgba(0, 0, 0, 0)')
     }
     await page.screenshot({path:`qa-screenshots/shop-filter-open-${width}.png`})
+    await clear.click();await expect(panel).toHaveClass(/open/);await apply.click();await expect(panel).not.toHaveClass(/open/)
   })
 }
