@@ -26,7 +26,7 @@ async function revealForScreenshot(page:Page){
   })
   await page.waitForTimeout(250)
 }
-async function screenshotViewport(page:Page,path:string,width:number){const height=await page.evaluate(()=>document.documentElement.scrollHeight);await page.screenshot({path,clip:{x:0,y:0,width,height}})}
+async function screenshotViewport(page:Page,path:string,_width:number){await page.screenshot({path,fullPage:true})}
 async function expectViewportSafe(page:Page){
   const overflow=await page.evaluate(()=>{const w=innerWidth;return [...document.querySelectorAll<HTMLElement>('main *,.footer *')].filter(el=>{const s=getComputedStyle(el);const r=el.getBoundingClientRect();return el.getClientRects().length>0&&s.display!=='none'&&s.visibility!=='hidden'&&!el.closest('dialog:not([open])')&&el.tagName!=='BR'&&(r.left < -1 || r.right>w+1)&&!el.closest('.ticker,.featured-rail,.gallery')}).slice(0,10).map(el=>({el:el.className||el.tagName,left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right),text:(el.textContent||'').trim().slice(0,40)}))});expect(overflow).toEqual([])
   const rootScroll=await page.evaluate(()=>{window.scrollTo(9999,0);const x=window.scrollX;window.scrollTo(0,0);return x});expect(rootScroll).toBeLessThanOrEqual(1);const clipped=await page.evaluate(()=>[...document.querySelectorAll<HTMLElement>('h1,h2')].filter(el=>{
