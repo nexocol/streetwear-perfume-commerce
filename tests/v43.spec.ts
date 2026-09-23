@@ -23,6 +23,12 @@ async function settle(page:Page){
     const step=Math.max(280,Math.floor(innerHeight*.55))
     for(let y=0;y<=document.documentElement.scrollHeight-innerHeight;y+=step){scrollTo(0,y);await sleep(120)}
     scrollTo(0,document.documentElement.scrollHeight);await sleep(320)
+    for(const rail of document.querySelectorAll<HTMLElement>('.featured-rail,.gallery')){
+      const max=Math.max(0,rail.scrollWidth-rail.clientWidth)
+      const railStep=Math.max(180,Math.floor(rail.clientWidth*.6))
+      for(let x=0;x<=max;x+=railStep){rail.scrollTo({left:x,behavior:'auto'});await sleep(120)}
+      rail.scrollTo({left:max,behavior:'auto'});await sleep(180);rail.scrollTo({left:0,behavior:'auto'})
+    }
     document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible'))
   })
   await page.waitForFunction(()=>{
