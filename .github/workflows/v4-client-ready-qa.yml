@@ -1,7 +1,7 @@
 name: V4 Client Ready QA
 on:
   push:
-    branches: [v4-client-ready-rebuild]
+    branches: [v4-client-ready-rebuild, v4.2-micro-polish]
   workflow_dispatch:
 jobs:
   qa:

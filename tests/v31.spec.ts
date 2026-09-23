@@ -147,3 +147,44 @@ for(const [width,height] of [[430,900],[390,844]]){
     await clear.click();await expect(panel).toHaveClass(/open/);await apply.click();await expect(panel).not.toHaveClass(/open/)
   })
 }
+
+
+async function settleSection(page:Page,selector:string){
+  const section=page.locator(selector)
+  await section.scrollIntoViewIfNeeded()
+  await page.waitForTimeout(450)
+  await page.evaluate(()=>document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible')))
+  await page.waitForTimeout(120)
+  return section
+}
+
+test('V4.2 micro polish geometry and trust affordance',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/');await waitStore(page);await prepareVisualEvidence(page)
+  const heading=page.locator('.collections-heading h2');const stage=page.locator('.category-stage')
+  const [h,s]=await Promise.all([heading.boundingBox(),stage.boundingBox()])
+  expect(h&&s&&h.x+h.width<=s.x+1,'Categories headline must not intrude into image stage').toBeTruthy()
+  const bridge=page.locator('.editorial-title-bridge');await bridge.scrollIntoViewIfNeeded();await expect(bridge).toBeVisible()
+  const trust=page.locator('.trust-rail button').first();await trust.scrollIntoViewIfNeeded();await trust.hover();await page.waitForTimeout(250)
+  const view=trust.locator('.trust-view');await expect(view).toBeVisible();expect(Number(await view.evaluate(el=>getComputedStyle(el).opacity))).toBeGreaterThan(.9)
+
+  await page.setViewportSize({width:430,height:900});await page.goto('/');await waitStore(page);await prepareVisualEvidence(page)
+  const mobileTrust=page.locator('.trust-rail button').first();await mobileTrust.scrollIntoViewIfNeeded();await expect(mobileTrust.locator('.trust-arrow')).toBeVisible()
+})
+
+test('V4.2 comparison evidence',async({page})=>{
+  const prod='https://streetwear-perfume-commerce.nexocolmj.workers.dev/'
+  await page.setViewportSize({width:1440,height:1000})
+  await page.goto(prod,{waitUntil:'networkidle'});await waitStore(page)
+  for(const [name,selector] of [['categories','.collections'],['fragrance','.fragrance'],['editorial','.editorial'],['trust-desktop','.trust-rail']] as const){
+    const section=await settleSection(page,selector);await section.screenshot({path:`qa-screenshots/v42-${name}-before.png`})
+  }
+  await mockApi(page);await page.goto('/');await waitStore(page);await prepareVisualEvidence(page)
+  for(const [name,selector] of [['categories','.collections'],['fragrance','.fragrance'],['editorial','.editorial']] as const){
+    const section=await settleSection(page,selector);await section.screenshot({path:`qa-screenshots/v42-${name}-after.png`})
+  }
+  const trust=await settleSection(page,'.trust-rail');await trust.locator('button').first().hover();await page.waitForTimeout(250);await trust.screenshot({path:'qa-screenshots/v42-trust-desktop-after-hover.png'})
+
+  await page.setViewportSize({width:430,height:900});await page.unroute('**/api/**');await page.goto(prod,{waitUntil:'networkidle'});await waitStore(page)
+  let mobileTrust=await settleSection(page,'.trust-rail');await mobileTrust.screenshot({path:'qa-screenshots/v42-trust-mobile-before.png'})
+  await mockApi(page);await page.goto('/');await waitStore(page);await prepareVisualEvidence(page);mobileTrust=await settleSection(page,'.trust-rail');await mobileTrust.screenshot({path:'qa-screenshots/v42-trust-mobile-after.png'})
+})

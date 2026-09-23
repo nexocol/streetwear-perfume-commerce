@@ -1,10 +1,17 @@
 import { useUI } from '../context/UIContext'
+const items=[
+  ['size','01','GUÍA DE TALLAS','Encuentra tu fit'],
+  ['changes','02','CAMBIOS','Revisa las condiciones'],
+  ['advice','03','ASESORÍA','Si dudas entre tallas'],
+  ['shipping','04','ENVÍOS','Consulta cobertura'],
+] as const
+
 export function TrustRail(){
   const ui=useUI()
   return <section className="trust-rail" aria-label="Ayuda de compra">
-    <button onClick={()=>ui.openInfo('size')}><span>01</span><b>GUÍA DE TALLAS</b><small>Encuentra tu fit</small></button>
-    <button onClick={()=>ui.openInfo('changes')}><span>02</span><b>CAMBIOS</b><small>Revisa las condiciones</small></button>
-    <button onClick={()=>ui.openInfo('advice')}><span>03</span><b>ASESORÍA</b><small>Si dudas entre tallas</small></button>
-    <button onClick={()=>ui.openInfo('shipping')}><span>04</span><b>ENVÍOS</b><small>Consulta cobertura</small></button>
+    {items.map(([key,index,title,copy])=><button key={key} onClick={()=>ui.openInfo(key)} aria-label={title+' — '+copy}>
+      <span className="trust-index">{index}</span><b>{title}</b><small>{copy}</small>
+      <span className="trust-view" aria-hidden="true">VER</span><span className="trust-arrow" aria-hidden="true">↗</span>
+    </button>)}
   </section>
 }
