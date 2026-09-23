@@ -1,4 +1,4 @@
-import type { Product } from '../types'
+import type { CatalogSnapshot, Product } from '../types'
 
 export type CommercialTerms={
   codMessage:string
@@ -23,11 +23,34 @@ export const DEFAULT_COMMERCIAL_TERMS:CommercialTerms={
 const TERMS_PREFIX='CLIENT_TERMS_V1:'
 const LEGACY_SHIPPING='La cobertura, el costo y los tiempos de envío se confirmarán según el destino.'
 const legacyName=/^(DENIM|TEE|SET|FRAGRANCE)\s*\/\s*\d+$/i
+const genericProvisional=/^(Pantalón — referencia por confirmar|Camiseta — marca por confirmar|Conjunto — marca por confirmar|Perfume — referencia por confirmar)$/i
+const categoryLabels:Record<string,string>={
+  Jeans:'Pantalones',
+  Streetwear:'Camisetas',
+  Conjuntos:'Conjuntos',
+  Perfumes:'Perfumes',
+  Sudaderas:'Sudaderas',
+}
 
 export function displayCategory(category:string){
-  if(category==='Jeans')return 'Pantalones'
-  if(category==='Streetwear')return 'Camisetas / Streetwear'
-  return category
+  return categoryLabels[category]||category
+}
+
+export function activeCatalogCategories(catalog:CatalogSnapshot){
+  return catalog.categories
+    .filter(category=>category.enabled&&catalog.products.some(product=>product.status==='active'&&(product.categoryId===category.id||product.category===category.name)))
+    .sort((a,b)=>a.sortOrder-b.sortOrder)
+}
+
+export function categoryListText(labels:string[]){
+  if(!labels.length)return 'Productos'
+  if(labels.length===1)return labels[0]
+  if(labels.length===2)return labels.join(' y ')
+  return labels.slice(0,-1).join(', ')+' y '+labels.at(-1)
+}
+
+function isDefaultProvisionalName(product:Product){
+  return legacyName.test(product.name)||genericProvisional.test(product.name)
 }
 
 export function productStyle(product:Product){
@@ -40,16 +63,26 @@ export function productStyle(product:Product){
 }
 
 export function displayProductName(product:Product){
-  if(!legacyName.test(product.name))return product.name
-  if(product.category==='Jeans')return 'Pantalón — referencia por confirmar'
-  if(product.category==='Streetwear')return 'Camiseta — marca por confirmar'
-  if(product.category==='Conjuntos')return 'Conjunto — marca por confirmar'
-  if(product.category==='Perfumes')return 'Perfume — referencia por confirmar'
-  return 'Producto — referencia por confirmar'
+  if(!isDefaultProvisionalName(product))return product.name
+  const known:Record<string,string>={
+    'denim-01':'Pantalón Rotos',
+    'denim-02':'Pantalón Lavado Gris',
+    'tee-01':'Camiseta Gráfica',
+    'set-01':'Conjunto Negro',
+    'perfume-01':'Perfume 01',
+    'perfume-02':'Perfume 02',
+  }
+  if(known[product.id])return known[product.id]
+  if(product.category==='Jeans')return 'Pantalón'
+  if(product.category==='Streetwear')return 'Camiseta'
+  if(product.category==='Conjuntos')return 'Conjunto'
+  if(product.category==='Sudaderas')return 'Sudadera'
+  if(product.category==='Perfumes')return 'Perfume'
+  return 'Producto'
 }
 
 export function displayProductSubtitle(product:Product){
-  if(!legacyName.test(product.name)&&product.subtitle)return product.subtitle
+  if(!isDefaultProvisionalName(product)&&product.subtitle)return product.subtitle
   const style=productStyle(product)
   if(product.category==='Jeans')return [style,product.fit&&style!==product.fit?product.fit:null].filter(Boolean).join(' · ')||'Estilo por confirmar'
   if(product.category==='Streetwear')return ['Gráfica',product.fit].filter(Boolean).join(' · ')
@@ -59,7 +92,7 @@ export function displayProductSubtitle(product:Product){
 }
 
 export function displayProductDescription(product:Product){
-  if(!legacyName.test(product.name)&&product.description)return product.description
+  if(!isDefaultProvisionalName(product)&&product.description)return product.description
   const style=productStyle(product)
   if(product.category==='Jeans')return `Pantalón denim${style?' con acabado '+style.toLowerCase():''}${product.fit?' y corte '+product.fit:''}.`
   if(product.category==='Streetwear')return `Camiseta gráfica${product.fit?' de fit '+product.fit:''}.`
@@ -70,7 +103,7 @@ export function displayProductDescription(product:Product){
 
 export function displayProductFeatures(product:Product){
   const oldSeedCopy=product.features.some(f=>/Streetwear premium|Denim de estructura sólida|Corte Flared Fit con pierna acampanada/i.test(f))
-  if(!legacyName.test(product.name)&&!oldSeedCopy)return product.features
+  if(!isDefaultProvisionalName(product)&&!oldSeedCopy)return product.features
   const style=productStyle(product)
   if(product.category==='Jeans')return [product.fit?'Corte '+product.fit+'.':null,style?'Estilo / acabado: '+style+'.':null].filter(Boolean) as string[]
   if(product.category==='Streetwear')return [product.fit?'Fit '+product.fit+'.':null,'Camiseta gráfica.'].filter(Boolean) as string[]
@@ -79,7 +112,7 @@ export function displayProductFeatures(product:Product){
 }
 
 export function normalizeLegacyProduct(product:Product):Product{
-  if(!legacyName.test(product.name))return product
+  if(!isDefaultProvisionalName(product))return product
   return {...product,name:displayProductName(product),subtitle:displayProductSubtitle(product),description:displayProductDescription(product)}
 }
 
@@ -89,8 +122,12 @@ export function clientHomeHeadline(value:string){
   return value
 }
 
-export function clientHomeSubheadline(value:string){
-  if(!value||/Jeans, prendas streetwear y fragancias del drop actual\.?/i.test(value))return 'Pantalones, camisetas, conjuntos y perfumes. Entra a la categoría que buscas y encuentra rápido lo que necesitas.'
+export function clientHomeSubheadline(value:string,categoryLabels:string[]=[]){
+  const defaultCopy=/^(Jeans, prendas streetwear y fragancias del drop actual\.?|Pantalones, camisetas, conjuntos y perfumes\. Entra a la categoría que buscas y encuentra rápido lo que necesitas\.)$/i
+  if(!value||defaultCopy.test(value)){
+    const list=categoryListText(categoryLabels.length?categoryLabels:['Pantalones','Camisetas','Conjuntos','Perfumes'])
+    return list+'. Entra a la categoría que buscas y encuentra rápido lo que necesitas.'
+  }
   return value
 }
 
