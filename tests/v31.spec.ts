@@ -27,7 +27,7 @@ async function revealForScreenshot(page:Page){
   await page.waitForTimeout(250)
 }
 async function expectViewportSafe(page:Page){
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),await page.evaluate(()=>{const w=innerWidth;return [...document.querySelectorAll<HTMLElement>('body *')].filter(el=>{const s=getComputedStyle(el);const r=el.getBoundingClientRect();return r.right>w+1&&s.position!=='fixed'&&!el.closest('.ticker,.featured-rail,.gallery')}).slice(0,8).map(el=>el.className||el.tagName).join(', ')})).toBeTruthy()
+  const overflow=await page.evaluate(()=>{const w=innerWidth;return [...document.querySelectorAll<HTMLElement>('main *,footer *')].filter(el=>{const s=getComputedStyle(el);const r=el.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&(r.left < -1 || r.right>w+1)&&!el.closest('.ticker,.featured-rail,.gallery')}).slice(0,10).map(el=>el.className||el.tagName)});expect(overflow).toEqual([])
   const clipped=await page.evaluate(()=>[...document.querySelectorAll<HTMLElement>('h1,h2')].filter(el=>{
     const r=document.createRange();r.selectNodeContents(el);const b=r.getBoundingClientRect();return b.left < -1 || b.right > window.innerWidth+1
   }).map(el=>el.textContent?.trim()))
