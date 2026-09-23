@@ -42,7 +42,7 @@ test('V4.3 catalog content and buyer journey',async({page})=>{
   await expect(page.locator('.catalog .card')).toHaveCount(1)
   await page.locator('.catalog .media').first().click();await expect(page.locator('.pdp-info')).toBeVisible()
   await expect(page.getByText('Rotos',{exact:true}).first()).toBeVisible()
-  await expect(page.getByText('ENVÍOS Y MÉTODOS DE PAGO')).toBeVisible()
+  await expect(page.locator('.pdp-info summary').filter({hasText:'ENVÍOS Y MÉTODOS DE PAGO'})).toBeVisible()
 })
 
 test('V4.3 perfume info structure',async({page})=>{
