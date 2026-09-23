@@ -35,7 +35,7 @@ test('V4.3 catalog content and buyer journey',async({page})=>{
   await mockApi(page);await page.goto('/');await waitReady(page);await assertNoLegacyNames(page)
   await expect(page.getByText(/Pantalones, camisetas, conjuntos y perfumes/i)).toBeVisible()
   await page.getByRole('link',{name:/VER LA COLECCIÓN/}).click();await expect(page.locator('.shop-hero')).toBeVisible();await assertNoLegacyNames(page)
-  await page.getByRole('button',{name:/FILTRAR / ORDENAR/}).click()
+  await page.getByRole('button',{name:/FILTRAR \/ ORDENAR/}).click()
   await expect(page.getByText('ESTILO / SUBTIPO')).toBeVisible()
   await page.getByRole('button',{name:'Rotos',exact:true}).click()
   await page.getByRole('button',{name:/VER 1 PRODUCTOS/}).click()
