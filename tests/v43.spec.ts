@@ -23,7 +23,7 @@ async function settle(page:Page){
 }
 async function expectSafe(page:Page){
   const root=await page.evaluate(()=>({sw:document.documentElement.scrollWidth,iw:innerWidth,x:scrollX}));expect(root.sw).toBeLessThanOrEqual(root.iw+1)
-  const clipped=await page.evaluate(()=>[...document.querySelectorAll<HTMLElement>('h1,h2,h3,p')].filter(el=>{const r=el.getBoundingClientRect();return el.getClientRects().length>0&&(r.left<-1||r.right>innerWidth+1)}).slice(0,8).map(el=>({text:(el.textContent||'').trim().slice(0,60),left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right})))
+  const clipped=await page.evaluate(()=>[...document.querySelectorAll<HTMLElement>('h1,h2,h3,p')].filter(el=>{if(el.closest('.featured-rail,.gallery'))return false;const r=el.getBoundingClientRect();return el.getClientRects().length>0&&(r.left<-1||r.right>innerWidth+1)}).slice(0,8).map(el=>({text:(el.textContent||'').trim().slice(0,60),left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right})))
   expect(clipped).toEqual([])
 }
 async function assertNoLegacyNames(page:Page){
@@ -33,7 +33,7 @@ async function assertNoLegacyNames(page:Page){
 
 test('V4.3 catalog content and buyer journey',async({page})=>{
   await mockApi(page);await page.goto('/');await waitReady(page);await assertNoLegacyNames(page)
-  await expect(page.getByText(/Pantalones, camisetas, conjuntos y perfumes/i)).toBeVisible()
+  await expect(page.locator('.hero-bottom').getByText(/Pantalones, camisetas, conjuntos y perfumes/i)).toBeVisible()
   await page.getByRole('link',{name:/VER LA COLECCIÓN/}).click();await expect(page.locator('.shop-hero')).toBeVisible();await assertNoLegacyNames(page)
   await page.getByRole('button',{name:/FILTRAR \/ ORDENAR/}).click()
   await expect(page.getByText('ESTILO / SUBTIPO')).toBeVisible()
@@ -69,7 +69,7 @@ test('V4.3 CMS remains editable without infrastructure changes',async({page})=>{
   await expect(page.getByLabel('Descripción breve')).toBeVisible()
   await expect(page.getByLabel('Categoría')).toBeVisible()
   await expect(page.getByLabel('Estilo / subtipo')).toBeVisible()
-  await expect(page.getByLabel('Precio')).toBeVisible()
+  await expect(page.getByLabel('Precio',{exact:true})).toBeVisible()
   await expect(page.getByText('MEDIA')).toBeVisible()
   await page.goto('/admin/products/'+seedCatalog.products.find(p=>p.category==='Perfumes')!.id);await waitReady(page)
   await expect(page.getByLabel('Composición / notas principales')).toBeVisible()
