@@ -1,9 +1,9 @@
 import { useUI } from '../context/UIContext'
 const items=[
-  ['size','01','GUÍA DE TALLAS','Encuentra tu fit'],
+  ['size','01','GUÍA DE TALLAS','Encuentra tu talla'],
   ['changes','02','CAMBIOS','Revisa las condiciones'],
-  ['advice','03','ASESORÍA','Si dudas entre tallas'],
-  ['shipping','04','ENVÍOS','Consulta cobertura'],
+  ['advice','03','ASESORÍA','Resuelve dudas de compra'],
+  ['shipping','04','ENVÍOS Y PAGOS','Contra entrega / anticipado'],
 ] as const
 
 export function TrustRail(){
