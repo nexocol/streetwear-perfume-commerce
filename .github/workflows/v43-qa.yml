@@ -18,12 +18,14 @@ jobs:
         run: npm run build
       - name: Smoke
         run: npm test
-      - name: V4.3 Playwright QA
-        run: npx playwright test tests/v43.spec.ts
+      - name: Full Playwright regression + V4.3 QA
+        run: npm run qa
       - name: Upload V4.3 screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v4-3-client-content-screenshots
-          path: qa-v43/
+          path: |
+            qa-v43/
+            qa-screenshots/
           if-no-files-found: warn
