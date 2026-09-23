@@ -4,13 +4,11 @@ import { useCatalog } from '../context/CatalogContext'
 import { ProductCard } from '../components/ProductCard'
 import { TrustRail } from '../components/TrustRail'
 import { ImageWithFallback } from '../components/ImageWithFallback'
-import { clientHomeHeadline, clientHomeSubheadline, displayCategory, displayProductName } from '../lib/clientContent'
-
-const marquee = 'PANTALONES — CAMISETAS — CONJUNTOS — PERFUMES — '
+import { activeCatalogCategories, categoryListText, clientHomeHeadline, clientHomeSubheadline, displayCategory, displayProductName } from '../lib/clientContent'
 
 export function HomePage(){
   const {catalog,productById}=useCatalog()
-  const [categoryPreview,setCategoryPreview]=useState('Jeans')
+  const [categoryPreview,setCategoryPreview]=useState('')
   if(!catalog)return null
 
   const cfg=catalog.homepage
@@ -21,19 +19,18 @@ export function HomePage(){
   const fragrance=productById(cfg.fragrancePrimaryId)||catalog.products.find(p=>p.category==='Perfumes')
   const fragrance2=productById(cfg.fragranceSecondaryId)||catalog.products.find(p=>p.category==='Perfumes'&&p.id!==fragrance?.id)
   const editorial=productById(cfg.editorialProductId)||catalog.products.find(p=>p.category==='Streetwear')
-  const preview=useMemo(()=>catalog.products.find(p=>p.category===categoryPreview)?.media[0],[catalog.products,categoryPreview])
+  const activeCategories=useMemo(()=>activeCatalogCategories(catalog),[catalog])
+  const commercialLabels=activeCategories.map(c=>displayCategory(c.name))
+  const effectivePreview=activeCategories.some(c=>c.name===categoryPreview)?categoryPreview:(activeCategories[0]?.name||'')
+  const preview=useMemo(()=>catalog.products.find(p=>p.status==='active'&&p.category===effectivePreview)?.media[0],[catalog.products,effectivePreview])
   if(!hero)return <main id="main" className="empty-results"><b>SIN PRODUCTOS ACTIVOS</b></main>
 
   const brand=catalog.site.brandName||'STORE / 001'
   const headline=clientHomeHeadline(cfg.heroHeadline)
   const headlineLines=headline.split(/\\n|\n/).filter(Boolean).slice(0,3)
-  const subheadline=clientHomeSubheadline(cfg.heroSubheadline)
-  const categories=[
-    {label:'PANTALONES',value:'Jeans',to:'/shop?cat=Jeans',index:'01'},
-    {label:'CAMISETAS',value:'Streetwear',to:'/shop?cat=Streetwear',index:'02'},
-    {label:'CONJUNTOS',value:'Conjuntos',to:'/shop?cat=Conjuntos',index:'03'},
-    {label:'PERFUMES',value:'Perfumes',to:'/shop?cat=Perfumes',index:'04'},
-  ]
+  const subheadline=clientHomeSubheadline(cfg.heroSubheadline,commercialLabels)
+  const categories=activeCategories.map((category,i)=>({label:displayCategory(category.name).toUpperCase(),value:category.name,to:'/shop?cat='+encodeURIComponent(category.name),index:String(i+1).padStart(2,'0')}))
+  const marquee=(commercialLabels.map(x=>x.toUpperCase()).join(' — ')+' — ')
 
   return <main id="main">
     <section className="hero" data-depth-section>
@@ -62,8 +59,8 @@ export function HomePage(){
     </section>
 
     <section className="collections" aria-labelledby="category-title">
-      <div className="collections-heading" data-reveal="mask"><span>03 / CATEGORÍAS</span><h2 id="category-title">ELIGE<br/>TU SECCIÓN.</h2><p>Pantalones, camisetas, conjuntos y perfumes. Entra directamente a la línea que estás buscando.</p></div>
-      <div className="category-stage" aria-hidden="true">{preview?<ImageWithFallback key={preview.id} src={preview.publicUrl} alt=""/>:<div className="image-fallback"><span>Imagen próximamente</span></div>}<span>{displayCategory(categoryPreview).toUpperCase()}</span></div>
+      <div className="collections-heading" data-reveal="mask"><span>03 / CATEGORÍAS</span><h2 id="category-title">ELIGE<br/>TU SECCIÓN.</h2><p>{categoryListText(commercialLabels)}. Entra directamente a la línea que estás buscando.</p></div>
+      <div className="category-stage" aria-hidden="true">{preview?<ImageWithFallback key={preview.id} src={preview.publicUrl} alt=""/>:<div className="image-fallback"><span>Imagen próximamente</span></div>}<span>{displayCategory(effectivePreview).toUpperCase()}</span></div>
       <nav className="collection-links" aria-label="Categorías">{categories.map(c=><Link key={c.value} to={c.to} onMouseEnter={()=>setCategoryPreview(c.value)} onFocus={()=>setCategoryPreview(c.value)}><span>{c.index}</span><b>{c.label}</b><em>VER PRODUCTOS ↗</em></Link>)}</nav>
     </section>
 
