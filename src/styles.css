@@ -60,3 +60,20 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
 @media(max-width:1024px){.pdp-info h1{font-size:clamp(30px,3.7vw,38px)}}
 @media(max-width:768px){html,body{max-width:100%;overflow-x:clip}.pdp-info{min-width:0;max-width:100%;overflow-x:hidden}.pdp-info h1{font-size:clamp(30px,8vw,42px);overflow-wrap:normal;word-break:normal}}
 @media(max-width:430px){.pdp-info h1{font-size:clamp(28px,7.8vw,34px)}}
+
+/* V4.3.1 final category heading fit — preserve V4.2 composition */
+@media(max-width:768px){
+  .collections-heading h2{
+    font-size:clamp(38px,7.2vw,56px);
+    line-height:.88;
+    max-width:100%;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+}
+@media(max-width:430px){
+  .collections-heading h2{font-size:clamp(32px,8.2vw,36px)}
+}
+@media(max-width:390px){
+  .collections-heading h2{font-size:32px}
+}
