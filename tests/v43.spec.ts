@@ -29,6 +29,9 @@ async function settle(page:Page){
       for(let x=0;x<=max;x+=railStep){rail.scrollTo({left:x,behavior:'auto'});await sleep(120)}
       rail.scrollTo({left:max,behavior:'auto'});await sleep(180);rail.scrollTo({left:0,behavior:'auto'})
     }
+    for(const img of document.querySelectorAll<HTMLImageElement>('main img,.footer img')){
+      img.scrollIntoView({block:'center',inline:'center',behavior:'auto'});await sleep(140)
+    }
     document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible'))
   })
   await page.waitForFunction(()=>{
