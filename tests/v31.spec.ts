@@ -38,6 +38,9 @@ async function prepareVisualEvidence(page:Page){
       for(let x=0;x<=max;x+=railStep){rail.scrollTo({left:x,behavior:'auto'});await sleep(120)}
       rail.scrollTo({left:max,behavior:'auto'});await sleep(180);rail.scrollTo({left:0,behavior:'auto'})
     }
+    for(const img of document.querySelectorAll<HTMLImageElement>('.hero-main-frame img,.hero-secondary img,.featured-rail .card img,.category-stage img,.fragrance img,.editorial-image img,.catalog-grid .card img,.gallery img,.related-grid .card img')){
+      img.scrollIntoView({block:'center',inline:'center',behavior:'auto'});await sleep(140)
+    }
     document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible'))
   })
   await page.waitForFunction((selector)=>{
