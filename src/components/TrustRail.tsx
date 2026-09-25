@@ -6,12 +6,14 @@ const items=[
   ['shipping','04','ENVÍOS Y PAGOS','Contra entrega / anticipado'],
 ] as const
 
-export function TrustRail(){
+/** `hideSize` drops the size-guide card (perfumes have no sizes); the remaining cards are renumbered. */
+export function TrustRail({hideSize=false}:{hideSize?:boolean}){
   const ui=useUI()
-  return <section className="trust-rail" aria-label="Ayuda de compra">
-    {items.map(([key,index,title,copy])=><button key={key} onClick={()=>ui.openInfo(key)} aria-label={title+' — '+copy}>
+  const shown=hideSize?items.filter(([key])=>key!=='size'):items
+  return <section className={'trust-rail'+(hideSize?' trust-rail--3':'')} aria-label="Ayuda de compra">
+    {shown.map(([key,,title,copy],i)=>{const index=String(i+1).padStart(2,'0');return<button key={key} onClick={()=>ui.openInfo(key)} aria-label={title+' — '+copy}>
       <span className="trust-index">{index}</span><b>{title}</b><small>{copy}</small>
       <span className="trust-view" aria-hidden="true">VER</span><span className="trust-arrow" aria-hidden="true">↗</span>
-    </button>)}
+    </button>})}
   </section>
 }

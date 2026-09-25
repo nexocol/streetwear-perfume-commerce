@@ -203,16 +203,18 @@ test.describe('V4.4D.1 productStyle does not confuse color with style/fit',()=>{
     expect(productStyle(byId('denim-02'))).toBe('Lavado gris')
   })
 
-  test('PDP shows "Por confirmar" for ESTILO / FIT when there is no real style',async({page})=>{
+  test('PDP without a real style never shows "Por confirmar" (V4.4H): category label + PRODUCTO fact',async({page})=>{
     const cat=catalog()
     const nike=cat.products.find(p=>p.id==='qa-nike')!
     nike.name='Sudadera Nike';nike.description='Sudadera Nike disponible en color gris y amarillo.';nike.color='Gris / Amarillo';nike.fit=null
     await mockApi(page,cat)
     await page.goto('/product/qa-nike')
     const fact=page.locator('.product-facts > div').first()
-    await expect(fact).toContainText('ESTILO / FIT')
-    await expect(fact.locator('b')).toHaveText('Por confirmar')
-    await expect(page.locator('.pdp-info > span').first()).toContainText('ESTILO POR CONFIRMAR')
+    await expect(fact).toContainText('PRODUCTO')
+    await expect(fact.locator('b')).toHaveText('Sudadera')
+    await expect(page.locator('.pdp-info > span').first()).toHaveText('SUDADERAS')
+    await expect(page.locator('.pdp-info')).not.toContainText('Por confirmar')
+    await expect(page.locator('.pdp-info')).not.toContainText('ESTILO POR CONFIRMAR')
     await expect(page.locator('.pdp-info')).not.toContainText('Estilo: Gris')
   })
 })

@@ -134,3 +134,7 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
   .section-heading h2{max-width:none}
   .section-heading>a{justify-self:end} /* the auto track may be stretched by leftover space: keep the link on the right edge as before */
 }
+
+/* V4.4H: the perfume PDP trust rail has 3 cards (no size guide). Same look, just re-flowed so no empty cell is left. */
+@media(min-width:1025px){.trust-rail--3{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1024px){.trust-rail--3 button:nth-child(3){grid-column:1/-1;border-right:0}}

@@ -108,8 +108,8 @@ test('V4.3 exact shipping and payment terms',async({page})=>{
   await expect(page.getByText('PAGO CONTRA ENTREGA')).toBeVisible()
   await expect(page.getByText('Pagas el valor de tu producto al recibirlo, pero el valor del envío se debe pagar por anticipado.')).toBeVisible()
   await expect(page.getByText('$15.000')).toBeVisible();await expect(page.getByText('$22.000')).toBeVisible();await expect(page.getByText('$30.000')).toBeVisible()
-  await expect(page.getByText('Valor total = valor de la prenda + $10.000 de envío.')).toBeVisible()
-  await expect(page.getByText('Para apartar tu prenda debes realizar un anticipo de $10.000. Este valor se descuenta del costo total de la prenda. No se cobra costo de envío.')).toBeVisible()
+  await expect(page.getByText('Valor total = valor del producto + $10.000 de envío.')).toBeVisible()
+  await expect(page.getByText('Para apartar tu producto debes realizar un anticipo de $10.000. Este valor se descuenta del costo total del producto. No se cobra costo de envío.')).toBeVisible()
 })
 
 test('V4.3 CMS remains editable without infrastructure changes',async({page})=>{

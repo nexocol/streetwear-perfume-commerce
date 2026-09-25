@@ -67,7 +67,7 @@ export function HomePage(){
     {fragrance&&<section id="fragrance" className="fragrance" data-depth-section>
       <div className="fragrance-visual" data-depth="1"><ImageWithFallback src={fragrance.media[0]?.publicUrl} alt={fragrance.media[0]?.alt||displayProductName(fragrance)} loading="lazy"/></div>
       <div className="fragrance-scrim" aria-hidden="true"/>
-      <div className="fragrance-copy" data-reveal="mask"><span>04 / PERFUMES</span><h2>PERFUMES<br/><i>/ 001</i></h2><p>Explora los perfumes disponibles y consulta en cada producto su composición, notas y perfil olfativo cuando estén confirmados.</p><Link to={'/product/'+fragrance.slug} data-magnetic className="btn light">VER PERFUMES</Link></div>
+      <div className="fragrance-copy" data-reveal="mask"><span>04 / PERFUMES</span><h2>PERFUMES<br/><i>/ 001</i></h2><p>Explora los perfumes disponibles y consulta en cada producto su composición, notas y perfil olfativo.</p><Link to={'/product/'+fragrance.slug} data-magnetic className="btn light">VER PERFUMES</Link></div>
       {fragrance2&&<Link className="fragrance-object" to={'/product/'+fragrance2.slug} data-depth="-1" data-cursor="VER"><ImageWithFallback src={fragrance2.media[0]?.publicUrl} alt={fragrance2.media[0]?.alt||displayProductName(fragrance2)} loading="lazy"/><span>{displayProductName(fragrance2)}<b>↗</b></span></Link>}
     </section>}
 

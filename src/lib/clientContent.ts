@@ -15,15 +15,43 @@ export const DEFAULT_COMMERCIAL_TERMS:CommercialTerms={
   codBogota:15000,
   codCundinamarca:22000,
   codNational:30000,
-  prepaidMessage:'Valor total = valor de la prenda + $10.000 de envío.',
+  prepaidMessage:'Valor total = valor del producto + $10.000 de envío.',
   prepaidShipping:10000,
-  pickupMessage:'Para apartar tu prenda debes realizar un anticipo de $10.000. Este valor se descuenta del costo total de la prenda. No se cobra costo de envío.'
+  pickupMessage:'Para apartar tu producto debes realizar un anticipo de $10.000. Este valor se descuenta del costo total del producto. No se cobra costo de envío.'
 }
 
 const TERMS_PREFIX='CLIENT_TERMS_V1:'
 const LEGACY_SHIPPING='La cobertura, el costo y los tiempos de envío se confirmarán según el destino.'
 const legacyName=/^(DENIM|TEE|SET|FRAGRANCE)\s*\/\s*\d+$/i
 const genericProvisional=/^(Pantalón — referencia por confirmar|Camiseta — marca por confirmar|Conjunto — marca por confirmar|Perfume — referencia por confirmar)$/i
+// Mixed catalog (clothing + perfumes): generic copy. D1 still stores the old clothing-only defaults, so those exact legacy strings
+// are mapped on the client (no D1 write); anything the client edited in the CMS is shown untouched.
+export const DEFAULT_CHANGES_COPY='El producto debe regresar sin uso, manchas, daños, modificaciones u olores, con etiquetas y elementos originales.'
+export const DEFAULT_ADVISORY_COPY='Si tienes dudas sobre talla, disponibilidad o características de un producto, consulta con nuestro equipo antes de realizar tu compra.'
+const LEGACY_CHANGES_COPY='La prenda debe regresar sin uso, manchas, daños, modificaciones u olores, con etiquetas y elementos originales.'
+const LEGACY_ADVISORY_COPY='Si estás entre dos tallas, compara las medidas con una prenda propia cuyo fit te guste antes de elegir.'
+export function clientChangesCopy(value:string|null|undefined){
+  const v=(value||'').trim()
+  return !v||v===LEGACY_CHANGES_COPY?DEFAULT_CHANGES_COPY:v
+}
+export function clientAdvisoryCopy(value:string|null|undefined){
+  const v=(value||'').trim()
+  return !v||v===LEGACY_ADVISORY_COPY?DEFAULT_ADVISORY_COPY:v
+}
+
+const categorySingular:Record<string,string>={
+  Jeans:'Pantalón',
+  Streetwear:'Camiseta',
+  Conjuntos:'Conjunto',
+  Perfumes:'Perfume',
+  Sudaderas:'Sudadera',
+  Shorts:'Short',
+}
+/** Singular commercial type ("Camiseta"), or null for a category we have no singular for. */
+export function categorySingularLabel(category:string){
+  return categorySingular[category]||null
+}
+
 const categoryLabels:Record<string,string>={
   Jeans:'Pantalones',
   Streetwear:'Camisetas',
@@ -83,7 +111,7 @@ export function displayProductName(product:Product){
 export function displayProductSubtitle(product:Product){
   if(!isDefaultProvisionalName(product)&&product.subtitle)return product.subtitle
   const style=productStyle(product)
-  if(product.category==='Jeans')return [style,product.fit&&style!==product.fit?product.fit:null].filter(Boolean).join(' · ')||'Estilo por confirmar'
+  if(product.category==='Jeans')return [style,product.fit&&style!==product.fit?product.fit:null].filter(Boolean).join(' · ')||displayCategory(product.category)
   if(product.category==='Streetwear')return ['Gráfica',product.fit].filter(Boolean).join(' · ')
   if(product.category==='Conjuntos')return ['Conjunto',product.fit].filter(Boolean).join(' · ')
   if(product.category==='Perfumes')return 'Composición por confirmar'

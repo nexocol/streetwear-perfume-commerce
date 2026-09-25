@@ -3,6 +3,7 @@ import { useCatalog } from '../context/CatalogContext'
 import { useUI } from '../context/UIContext'
 import { sizeGuide } from '../data/sizeGuide'
 import { ShippingPayments } from './ShippingPayments'
+import { clientAdvisoryCopy, clientChangesCopy } from '../lib/clientContent'
 
 export function Dialogs(){
   const {catalog}=useCatalog(); const ui=useUI(); const sizeRef=useRef<HTMLDialogElement>(null); const infoRef=useRef<HTMLDialogElement>(null)
@@ -13,8 +14,8 @@ export function Dialogs(){
   },[ui.info])
   const site=catalog?.site
   const info=ui.info&&ui.info!=='size'&&ui.info!=='shipping'?{
-    changes:{title:'CAMBIOS',text:site?.changesCopy||'La prenda debe regresar sin uso, manchas, daños, modificaciones u olores, con etiquetas y elementos originales.'},
-    advice:{title:'ASESORÍA',text:site?.advisoryCopy||'Si estás entre dos tallas, compara las medidas con una prenda propia cuyo fit te guste antes de elegir.'}
+    changes:{title:'CAMBIOS',text:clientChangesCopy(site?.changesCopy)},
+    advice:{title:'ASESORÍA',text:clientAdvisoryCopy(site?.advisoryCopy)}
   }[ui.info]:null
   const whatsapp=site?.whatsapp?.replace(/\D/g,'')
   return <>
