@@ -25,7 +25,7 @@ export function HomePage(){
   const preview=useMemo(()=>catalog.products.find(p=>p.status==='active'&&p.category===effectivePreview)?.media[0],[catalog.products,effectivePreview])
   if(!hero)return <main id="main" className="empty-results"><b>SIN PRODUCTOS ACTIVOS</b></main>
 
-  const brand=catalog.site.brandName||'STORE / 001'
+  const brand=catalog.site.brandName||'EL PUNTO'
   const headline=clientHomeHeadline(cfg.heroHeadline)
   const headlineLines=headline.split(/\\n|\n/).filter(Boolean).slice(0,3)
   const subheadline=clientHomeSubheadline(cfg.heroSubheadline,commercialLabels)

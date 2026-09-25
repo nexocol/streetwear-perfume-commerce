@@ -3,13 +3,14 @@ import { Link, useLocation } from 'react-router-dom'
 import { useCatalog } from '../context/CatalogContext'
 import { useCommerce } from '../commerce/CommerceProvider'
 import { useUI } from '../context/UIContext'
+import { BrandMark, BRAND_FALLBACK_NAME } from './BrandMark'
 
 function SearchIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.2 4.2"/></svg>}
 function BagIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 8.5h13l1.2 11H4.3l1.2-11Z"/><path d="M8.6 9V6.7a3.4 3.4 0 0 1 6.8 0V9"/></svg>}
 
 export function Header(){
   const {catalog}=useCatalog(); const commerce=useCommerce(); const ui=useUI(); const location=useLocation()
-  const brand=useMemo(()=>({name:catalog?.site.brandName||'STORE / 001',logo:catalog?.site.logoUrl,season:'DROP / 001'}),[catalog])
+  const brand=useMemo(()=>({name:catalog?.site.brandName||BRAND_FALLBACK_NAME,logo:catalog?.site.logoUrl,season:'DROP / 001'}),[catalog])
   const count=commerce.lines.reduce((n,l)=>n+l.quantity,0)
   useEffect(()=>{ui.closeMenu();ui.closeSearch()},[location.pathname,location.search])
   useEffect(()=>{
@@ -27,7 +28,7 @@ export function Header(){
     <header className="nav" data-header>
       <button className="nav-menu" onClick={ui.openMenu} aria-label="Abrir menú">MENÚ</button>
       <Link to="/" className="brand" data-cursor="ABRIR">
-        {brand.logo?<img src={brand.logo} alt={brand.name}/>:<strong>{brand.name}</strong>}<span>{brand.season}</span>
+        <BrandMark name={brand.name} logo={brand.logo}/><span>{brand.season}</span>
       </Link>
       <nav aria-label="Principal">
         <Link to="/shop" data-cursor="TIENDA">TIENDA</Link>
@@ -40,7 +41,7 @@ export function Header(){
       </div>
     </header>
     <aside className={'mobile-menu '+(ui.menuOpen?'open':'')} aria-hidden={!ui.menuOpen}>
-      <div className="mobile-menu-top"><span>{brand.name}</span><button onClick={ui.closeMenu} aria-label="Cerrar menú">×</button></div>
+      <div className="mobile-menu-top"><span className="menu-brand"><BrandMark name={brand.name} logo={brand.logo}/></span><button onClick={ui.closeMenu} aria-label="Cerrar menú">×</button></div>
       <nav><Link to="/shop">TIENDA</Link><Link to="/#fragrance">FRAGRANCE</Link><Link to="/#editorial">EDITORIAL</Link><button onClick={ui.openSearch}>BUSCAR</button></nav>
       <small>{brand.season} / 2026</small>
     </aside>
