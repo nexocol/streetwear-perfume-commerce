@@ -30,7 +30,7 @@ export function ProductInfo({product}:{product:Product}){
 
     {perfume?<details open><summary>COMPOSICIÓN / NOTAS <span>+</span></summary><div className="perfume-profile">
       <div><span>NOTAS PRINCIPALES</span>{features.length?<ul>{features.map((f,i)=><li key={i}>{f}</li>)}</ul>:<b>Por confirmar</b>}</div>
-      <div><span>FAMILIA OLFATIVA</span><b>Por confirmar</b></div>
+      <div><span>FAMILIA OLFATIVA</span><b>{product.fragranceFamily||'Por confirmar'}</b></div>
       <div><span>DESCRIPCIÓN</span><p>{description}</p></div>
     </div></details>:<details open><summary>DETALLES DEL PRODUCTO <span>+</span></summary><ul>{features.length?features.map((f,i)=><li key={i}>{f}</li>):<li>{style?'Estilo: '+style+'.':'Información adicional por confirmar.'}</li>}</ul></details>}
 
