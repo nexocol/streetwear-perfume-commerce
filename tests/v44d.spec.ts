@@ -1,6 +1,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test'
 import { seedCatalog } from '../src/data/seed'
 import type { CatalogSnapshot, Product, Variant } from '../src/types'
+import { productStyle } from '../src/lib/clientContent'
 
 const LOGO='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="139" height="100" viewBox="0 0 139 100"><rect width="139" height="100" rx="40" fill="#0b0b0b"/><text x="70" y="58" font-size="26" fill="#fff" text-anchor="middle" font-family="sans-serif">EL PUNTO</text></svg>')
 
@@ -169,5 +170,49 @@ test.describe('V4.4D branding',()=>{
     await expect(page.locator('header.nav .brand-text')).toHaveText('EL PUNTO')
     await expect(page.locator('.footer-brand .brand-text')).toHaveText('EL PUNTO')
     expect(await page.locator('header.nav, footer.footer').allInnerTexts()).not.toContain('STORE / 001')
+  })
+})
+
+test.describe('V4.4D.1 productStyle does not confuse color with style/fit',()=>{
+  const styleProduct=(over:Partial<Product>):Product=>({...product('qa-style','Producto QA',[variant('qa-style','S',null,1)]),fit:null,subtitle:null,description:null,...over})
+
+  test('a "gris y amarillo" description without fit yields no style',()=>{
+    const nike=styleProduct({name:'Sudadera Nike',description:'Sudadera Nike disponible en color gris y amarillo.',color:'Gris / Amarillo',fit:null,
+      media:[{id:'m',productId:'qa-style',mediaType:'hero',storagePath:null,publicUrl:'/x.png',alt:'Sudadera Nike, color gris',sortOrder:1}]})
+    expect(productStyle(nike)).toBeNull()
+    expect(productStyle(nike)).not.toBe('Gris')
+  })
+
+  test('color words never override a real fit',()=>{
+    expect(productStyle(styleProduct({description:'Sudadera gris y amarilla.',fit:'Oversized'}))).toBe('Oversized')
+    expect(productStyle(styleProduct({name:'Pantalón Negro Desgastado',description:'Pantalón denim negro con acabado desgastado.',fit:'Flared Fit'}))).toBe('Flared Fit')
+  })
+
+  test('semantic rules are preserved: Lavado gris, Rotos, Brillos, fit',()=>{
+    expect(productStyle(styleProduct({name:'Pantalón Lavado Gris',description:'Denim gris con silueta amplia y acabado lavado.'}))).toBe('Lavado gris')
+    expect(productStyle(styleProduct({name:'Pantalón Rotos'}))).toBe('Rotos')
+    expect(productStyle(styleProduct({description:'Denim distressed con costuras vistas.'}))).toBe('Rotos')
+    expect(productStyle(styleProduct({name:'Pantalón Diamantado con brillos'}))).toBe('Brillos')
+    expect(productStyle(styleProduct({fit:'Regular'}))).toBe('Regular')
+    expect(productStyle(styleProduct({}))).toBeNull()
+  })
+
+  test('the legacy seed products keep their styles',()=>{
+    const byId=(id:string)=>seedCatalog.products.find(p=>p.id===id)!
+    expect(productStyle(byId('denim-01'))).toBe('Rotos')
+    expect(productStyle(byId('denim-02'))).toBe('Lavado gris')
+  })
+
+  test('PDP shows "Por confirmar" for ESTILO / FIT when there is no real style',async({page})=>{
+    const cat=catalog()
+    const nike=cat.products.find(p=>p.id==='qa-nike')!
+    nike.name='Sudadera Nike';nike.description='Sudadera Nike disponible en color gris y amarillo.';nike.color='Gris / Amarillo';nike.fit=null
+    await mockApi(page,cat)
+    await page.goto('/product/qa-nike')
+    const fact=page.locator('.product-facts > div').first()
+    await expect(fact).toContainText('ESTILO / FIT')
+    await expect(fact.locator('b')).toHaveText('Por confirmar')
+    await expect(page.locator('.pdp-info > span').first()).toContainText('ESTILO POR CONFIRMAR')
+    await expect(page.locator('.pdp-info')).not.toContainText('Estilo: Gris')
   })
 })

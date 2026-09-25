@@ -58,7 +58,6 @@ export function productStyle(product:Product){
   if(source.includes('brillo'))return 'Brillos'
   if(source.includes('roto')||source.includes('distressed'))return 'Rotos'
   if((source.includes('gris')||source.includes('grey'))&&source.includes('lav'))return 'Lavado gris'
-  if(source.includes('grey')||source.includes('gris'))return 'Gris'
   return product.fit||null
 }
 
