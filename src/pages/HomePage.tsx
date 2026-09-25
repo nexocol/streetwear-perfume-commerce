@@ -61,7 +61,7 @@ export function HomePage(){
     <section className="collections" aria-labelledby="category-title">
       <div className="collections-heading" data-reveal="mask"><span>03 / CATEGORÍAS</span><h2 id="category-title">ELIGE<br/>TU SECCIÓN.</h2><p>{categoryListText(commercialLabels)}. Entra directamente a la línea que estás buscando.</p></div>
       <div className="category-stage" aria-hidden="true">{preview?<ImageWithFallback key={preview.id} src={preview.publicUrl} alt=""/>:<div className="image-fallback"><span>Imagen próximamente</span></div>}<span>{displayCategory(effectivePreview).toUpperCase()}</span></div>
-      <nav className="collection-links" aria-label="Categorías">{categories.map(c=><Link key={c.value} to={c.to} onMouseEnter={()=>setCategoryPreview(c.value)} onFocus={()=>setCategoryPreview(c.value)}><span>{c.index}</span><b>{c.label}</b><em>VER PRODUCTOS ↗</em></Link>)}</nav>
+      <nav className="collection-links" aria-label="Categorías">{categories.map(c=><Link key={c.value} to={c.to} onMouseEnter={()=>setCategoryPreview(c.value)} onFocus={()=>setCategoryPreview(c.value)}><span>{c.index}</span><b>{c.label}</b><em><span className="cta-text">VER PRODUCTOS </span>↗</em></Link>)}</nav>
     </section>
 
     {fragrance&&<section id="fragrance" className="fragrance" data-depth-section>

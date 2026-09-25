@@ -90,15 +90,38 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
 @media(max-width:1100px){.variant-editor>div{grid-template-columns:repeat(3,1fr);padding-bottom:10px;border-bottom:1px solid var(--line)}}
 @media(max-width:768px){.brand img{height:38px;max-width:80px}.footer-brand img{height:52px}.variant-editor>div{grid-template-columns:1fr 1fr;padding-bottom:10px;border-bottom:1px solid var(--line)}}
 
-/* V4.4F categories: the headline may use part of the column gap but never enters the image stage.
-   Font size is capped by the real column width (7.9em ~= widest line "SECCIÓN."; 16px clearance). Only side-by-side ranges. */
-@media(min-width:1025px){
+/* V4.4F.1 categories + featured rail responsive fix.
+   Root causes: column MINIMUMS that do not fit (Home overflow at 769-900 and 1025-1149) and a fixed-width hover CTA
+   that collided with long category names. No global overflow clipping, no magic offsets. */
+
+/* Featured rail: below ~1150px the grid minimums (330 + 3x230 + gaps + padding) exceed the container: let the tracks shrink. */
+@media(min-width:1025px) and (max-width:1149px){
+  .featured-rail{grid-template-columns:minmax(0,1.35fr) repeat(3,minmax(0,.78fr))}
+}
+
+/* Categories, wide desktop: headline capped by its real column width, 16px clearance from the image stage. */
+@media(min-width:1101px){
   .collections{grid-template-columns:minmax(330px,1fr) minmax(220px,.46fr) minmax(360px,1fr)}
   .collections-heading{container-type:inline-size}
   .collections-heading h2{font-size:min(clamp(48px,5.1vw,78px),calc((100cqw + clamp(28px,3.6vw,58px) - 16px)/7.9))}
 }
-@media(min-width:769px) and (max-width:1024px){
-  .collections{grid-template-columns:minmax(280px,1.08fr) 190px minmax(300px,1fr)}
+/* Categories, compact desktop / large tablet: three columns whose minimums (280 + 190 + 300 + gaps + padding) fit from 901px. */
+@media(min-width:901px) and (max-width:1100px){
+  .collections{grid-template-columns:minmax(280px,1.08fr) 190px minmax(300px,1fr);gap:24px}
   .collections-heading{container-type:inline-size}
   .collections-heading h2{font-size:min(clamp(42px,5.5vw,56px),calc((100cqw + 24px - 16px)/7.9))}
+}
+/* Categories, tablet (769-900): three columns cannot hold the headline at a real display size, so the headline takes its own row
+   and the image + links sit side by side below it. */
+@media(min-width:769px) and (max-width:900px){
+  .collections{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);grid-template-areas:"head head" "stage links";gap:44px 24px}
+  .collections-heading{grid-area:head}
+  .category-stage{grid-area:stage}
+  .collection-links{grid-area:links}
+  .collections-heading h2{font-size:clamp(42px,6vw,56px)}
+}
+/* Hover CTA: full text only from 1320px, where the longest label (PANTALONES) leaves >=15px before it; below that the arrow alone. */
+.collection-links em .cta-text{font:inherit;color:inherit;letter-spacing:inherit} /* keep the CTA exactly as before: do not inherit the numeral span style */
+@media(max-width:1319px){
+  .collection-links .cta-text{display:none}
 }

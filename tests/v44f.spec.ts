@@ -2,7 +2,7 @@ import { test, expect, type Page, type Route } from '@playwright/test'
 import { seedCatalog } from '../src/data/seed'
 import type { CatalogSnapshot, Product } from '../src/types'
 
-// Five active categories (Pantalones, Camisetas, Sudaderas, Perfumes, Shorts) built from the seed, so the Home category section renders like production.
+// Five active categories (Pantalones, Camisetas, Sudaderas, Perfumes, Shorts) built from the seed, so Home renders like production.
 function fiveCategoryCatalog():CatalogSnapshot{
   const c=structuredClone(seedCatalog)
   const tee=c.products.find(p=>p.id==='tee-01')!
@@ -10,6 +10,7 @@ function fiveCategoryCatalog():CatalogSnapshot{
   const hoodies=c.categories.find(x=>x.name==='Sudaderas')!
   c.products=[...c.products.filter(p=>p.category!=='Conjuntos'),extra('qa-sudadera','Sudaderas',hoodies.id,90),extra('qa-short','Shorts','cat-shorts',91)]
   c.categories=[...c.categories.filter(x=>x.name!=='Conjuntos'),{id:'cat-shorts',slug:'shorts',name:'Shorts',enabled:true,sortOrder:99}]
+  c.homepage={...c.homepage,featuredProductIds:['denim-01','tee-01','denim-02','qa-sudadera']} // 4 featured cards, as in production
   return c
 }
 async function mockApi(page:Page,catalog:CatalogSnapshot){
@@ -19,48 +20,79 @@ async function mockApi(page:Page,catalog:CatalogSnapshot){
     return route.continue()
   })
 }
+const WIDTHS=[1440,1320,1280,1200,1100,1025,1024,900,820,769,768,430,390]
+const scrollWidth=(page:Page)=>page.evaluate(()=>({sw:document.documentElement.scrollWidth,vw:innerWidth}))
 
-const WIDTHS:[number,number][]=[[1440,900],[1024,768],[768,1024],[430,932],[390,844]]
-for(const [w,h] of WIDTHS){
-  test(`V4.4F categories headline never enters the image stage @${w} (5 categories)`,async({page})=>{
-    await page.setViewportSize({width:w,height:h})
-    await mockApi(page,fiveCategoryCatalog())
-    await page.goto('/')
-    await expect(page.locator('.collection-links a')).toHaveCount(5)
-    await page.locator('.collections').scrollIntoViewIfNeeded()
-    await page.evaluate(()=>document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible')))
-    await page.waitForTimeout(500)
-    const g=await page.evaluate(()=>{
-      const h2=document.querySelector('.collections-heading h2') as HTMLElement
-      const range=document.createRange();range.selectNodeContents(h2)
-      const rects=[...range.getClientRects()]
-      const textRight=Math.max(...rects.map(r=>r.right)),textBottom=Math.max(...rects.map(r=>r.bottom))
-      const stage=document.querySelector('.category-stage') as HTMLElement;const s=stage.getBoundingClientRect()
-      const sideBySide=s.left>h2.getBoundingClientRect().left+20&&s.top<textBottom-2
-      return {textRight,textBottom,stageLeft:s.left,stageTop:s.top,sideBySide,sw:document.documentElement.scrollWidth,vw:innerWidth,font:parseFloat(getComputedStyle(h2).fontSize)}
+async function categoryGeometry(page:Page){
+  return page.evaluate(()=>{
+    const h2=document.querySelector('.collections-heading h2') as HTMLElement
+    const range=document.createRange();range.selectNodeContents(h2)
+    const rects=[...range.getClientRects()]
+    const textRight=Math.max(...rects.map(r=>r.right)),textBottom=Math.max(...rects.map(r=>r.bottom))
+    const stage=(document.querySelector('.category-stage') as HTMLElement).getBoundingClientRect()
+    const sideBySide=stage.left>h2.getBoundingClientRect().left+20&&stage.top<textBottom-2
+    const links=[...document.querySelectorAll('.collection-links a')].map(a=>{
+      const b=a.querySelector('b') as HTMLElement,em=a.querySelector('em') as HTMLElement,cta=em.querySelector('.cta-text') as HTMLElement|null
+      const lr=document.createRange();lr.selectNodeContents(b)
+      const label=lr.getBoundingClientRect(),row=a.getBoundingClientRect()
+      const ctaTextVisible=!!cta&&getComputedStyle(cta).display!=='none'&&getComputedStyle(em).display!=='none'
+      const emVisible=getComputedStyle(em).display!=='none'
+      const ctaLeft=ctaTextVisible?(cta as HTMLElement).getBoundingClientRect().left:(emVisible?em.getBoundingClientRect().left:Infinity)
+      return {name:b.innerText,labelRight:label.right,rowRight:row.right,ctaLeft,ctaTextVisible,emVisible}
     })
-    if(g.sideBySide){
-      // right edge of the headline text <= left edge of the category stage (1px tolerance)
-      expect(g.textRight,`headline right ${g.textRight} must be <= stage left ${g.stageLeft}`).toBeLessThanOrEqual(g.stageLeft+1)
-    }else{
-      // stacked (<=768): the headline sits above the stage and stays inside the viewport
-      expect(g.textBottom,'stacked headline must end above the stage').toBeLessThanOrEqual(g.stageTop+1)
-      expect(g.textRight).toBeLessThanOrEqual(g.vw)
-    }
-    expect(g.sw,'no horizontal overflow').toBeLessThanOrEqual(g.vw+1)
-    // the headline must stay a real display title (not shrunk to body size)
-    expect(g.font).toBeGreaterThanOrEqual(w>=1025?60:w>=769?44:30)
+    return {textRight,textBottom,stageLeft:stage.left,stageTop:stage.top,sideBySide,links,font:parseFloat(getComputedStyle(h2).fontSize),vw:innerWidth}
   })
 }
 
-test('V4.4F categories headline stays clear of the stage across intermediate desktop widths',async({page})=>{
+for(const w of WIDTHS){
+  test(`V4.4F.1 Home: no overflow, headline clear of the stage, no CTA collisions @${w}`,async({page})=>{
+    await page.setViewportSize({width:w,height:900})
+    await mockApi(page,fiveCategoryCatalog())
+    await page.goto('/')
+    await expect(page.locator('.collection-links a')).toHaveCount(5)
+    await expect(page.locator('.featured-rail .card')).toHaveCount(4)
+    await page.evaluate(()=>document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible')))
+    await page.locator('.collections').scrollIntoViewIfNeeded();await page.waitForTimeout(400)
+
+    // C. no horizontal overflow (real cause fixed; no overflow-x:hidden patch)
+    const {sw,vw}=await scrollWidth(page)
+    expect(sw,`scrollWidth ${sw} vs viewport ${vw}`).toBeLessThanOrEqual(vw+1)
+
+    const g=await categoryGeometry(page)
+    // A. headline right edge <= stage left edge minus a reasonable minimum (side by side); otherwise it sits above the stage inside the viewport
+    if(g.sideBySide){
+      expect(g.textRight,`headline right ${g.textRight} vs stage left ${g.stageLeft}`).toBeLessThanOrEqual(g.stageLeft-12)
+    }else{
+      expect(g.textBottom,'headline must end above the stage when stacked').toBeLessThanOrEqual(g.stageTop+1)
+      expect(g.textRight).toBeLessThanOrEqual(g.vw)
+    }
+    // "do not shrink the headline excessively": at least 85% of the size the section had before (its own clamp for that range)
+    const designed=w>=1101?Math.min(78,Math.max(48,.051*w)):w>=769?Math.min(56,Math.max(42,.055*w)):30
+    expect(g.font,`headline ${g.font}px vs designed ${designed.toFixed(1)}px`).toBeGreaterThanOrEqual(designed*.85)
+
+    // B. every link: label inside its row, and label right < CTA left (text CTA when shown, arrow otherwise) with a real gap
+    expect(g.links.map(l=>l.name)).toEqual(['PANTALONES','CAMISETAS','PERFUMES','SUDADERAS','SHORTS'])
+    for(const l of g.links){
+      expect(l.labelRight,`${l.name} label must stay inside its row`).toBeLessThanOrEqual(l.rowRight+0.5)
+      if(l.emVisible)expect(l.labelRight,`${l.name} label right ${l.labelRight} vs CTA left ${l.ctaLeft}`).toBeLessThanOrEqual(l.ctaLeft-8)
+    }
+    // the textual CTA only exists where it has room
+    expect(g.links.every(l=>l.ctaTextVisible)||g.links.every(l=>!l.ctaTextVisible)).toBeTruthy()
+    if(w>=1320)expect(g.links.every(l=>l.ctaTextVisible),'text CTA expected on wide desktop').toBeTruthy()
+    if(w<1320&&w>=769)expect(g.links.every(l=>!l.ctaTextVisible),'arrow-only CTA below 1320').toBeTruthy()
+    if(g.links.every(l=>l.ctaTextVisible))for(const l of g.links)expect(l.ctaLeft-l.labelRight,`${l.name} text-CTA clearance`).toBeGreaterThanOrEqual(12)
+  })
+}
+
+test('V4.4F.1 Shop and PDP have no horizontal overflow at every intermediate width',async({page})=>{
   await mockApi(page,fiveCategoryCatalog())
-  await page.goto('/')
-  await expect(page.locator('.collection-links a')).toHaveCount(5)
-  for(const w of [1600,1366,1280,1180,1100,1025,1000,900,820,769]){
-    await page.setViewportSize({width:w,height:900});await page.waitForTimeout(200)
-    const gap=await page.evaluate(()=>{const h2=document.querySelector('.collections-heading h2') as HTMLElement;const r=document.createRange();r.selectNodeContents(h2);const tr=Math.max(...[...r.getClientRects()].map(x=>x.right));return (document.querySelector('.category-stage') as HTMLElement).getBoundingClientRect().left-tr})
-    expect(gap,`clearance at ${w}px`).toBeGreaterThanOrEqual(-1)
+  for(const path of ['/shop','/product/'+seedCatalog.products[0].slug]){
+    await page.goto(path)
+    for(const w of WIDTHS){
+      await page.setViewportSize({width:w,height:900});await page.waitForTimeout(150)
+      const {sw,vw}=await scrollWidth(page)
+      expect(sw,`${path} @${w}`).toBeLessThanOrEqual(vw+1)
+    }
   }
 })
 
