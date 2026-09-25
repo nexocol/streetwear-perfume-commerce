@@ -1,4 +1,10 @@
-export const SCHEMA_VERSION=1
+// v1 = initial schema + seed (SCHEMA_SQL / SEED_SQL below). Later versions are incremental migrations and must never re-run SEED_SQL.
+export const BASE_SCHEMA_VERSION=1
+export const SCHEMA_VERSION=2
+
+// v2 = perfume fragrance family (optional, only meaningful for the Perfumes category).
+export const MIGRATION_V2_COLUMN='fragrance_family'
+export const MIGRATION_V2_SQL='ALTER TABLE products ADD COLUMN fragrance_family TEXT'
 
 export const SCHEMA_SQL=String.raw`
 CREATE TABLE IF NOT EXISTS schema_migrations(

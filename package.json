@@ -11,7 +11,8 @@
     "test": "node scripts/v3-smoke.mjs",
     "deploy": "npm run build && wrangler deploy",
     "deploy:v3": "npm run build && wrangler deploy -c wrangler.v3.jsonc",
-    "qa": "playwright test"
+    "qa": "playwright test",
+    "qa:migration": "node scripts/migration-qa.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",

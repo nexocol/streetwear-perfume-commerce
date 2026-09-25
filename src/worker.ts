@@ -1,4 +1,4 @@
-import { SCHEMA_SQL, SEED_SQL, SCHEMA_VERSION } from './server/schema'
+import { SCHEMA_SQL, SEED_SQL, BASE_SCHEMA_VERSION, SCHEMA_VERSION, MIGRATION_V2_COLUMN, MIGRATION_V2_SQL } from './server/schema'
 
 type AccessIdentity={email?:string|null}
 type AccessContext={access?:{getIdentity:()=>Promise<AccessIdentity|null>}}
@@ -18,6 +18,15 @@ async function runSqlScript(env:Env,sql:string){
     await env.DB.prepare(statement).run()
   }
 }
+async function migrateToV2(env:Env){
+  // Idempotent: skip the ALTER when the column already exists (manual `wrangler d1 migrations apply`, or another isolate won the race).
+  const has=await env.DB.prepare("SELECT COUNT(*) AS n FROM pragma_table_info('products') WHERE name=?").bind(MIGRATION_V2_COLUMN).first()
+  if(!Number(has?.n||0)){
+    try{await env.DB.prepare(MIGRATION_V2_SQL).run()}
+    catch(error){if(!/duplicate column/i.test(error instanceof Error?error.message:String(error)))throw error}
+  }
+  await env.DB.prepare('INSERT OR IGNORE INTO schema_migrations(version) VALUES(?)').bind(2).run()
+}
 async function ensureDatabase(env:Env){
   if(ready)return
   try{
@@ -25,11 +34,12 @@ async function ensureDatabase(env:Env){
   }catch{
     await runSqlScript(env,SCHEMA_SQL)
   }
-  const row=await env.DB.prepare('SELECT version FROM schema_migrations WHERE version=?').bind(SCHEMA_VERSION).first()
-  if(!row){
+  const applied=new Set<number>(((await env.DB.prepare('SELECT version FROM schema_migrations').all()).results||[]).map((r:any)=>Number(r.version)))
+  if(!applied.has(BASE_SCHEMA_VERSION)){
     await runSqlScript(env,SEED_SQL)
-    await env.DB.prepare('INSERT INTO schema_migrations(version) VALUES(?)').bind(SCHEMA_VERSION).run()
+    await env.DB.prepare('INSERT INTO schema_migrations(version) VALUES(?)').bind(BASE_SCHEMA_VERSION).run()
   }
+  if(SCHEMA_VERSION>=2&&!applied.has(2))await migrateToV2(env)
   ready=true
 }
 
@@ -86,7 +96,7 @@ async function getCatalog(env:Env,includeInactive=false){
   for(const m of mediaRes.results||[]){const a=mediaBy.get(m.product_id)||[];a.push(m);mediaBy.set(m.product_id,a)}
   for(const c of linkRes.results||[]){const a=colsBy.get(c.product_id)||[];a.push(c);colsBy.set(c.product_id,a)}
   const products=(productsRes.results||[]).map((p:any)=>({
-    id:p.id,slug:p.slug,name:p.name,nameStatus:p.name_status,subtitle:p.subtitle,description:p.description,categoryId:p.category_id,category:p.category_name||'',fit:p.fit,color:p.color,
+    id:p.id,slug:p.slug,name:p.name,nameStatus:p.name_status,subtitle:p.subtitle,description:p.description,categoryId:p.category_id,category:p.category_name||'',fit:p.fit,color:p.color,fragranceFamily:p.fragrance_family??null,
     price:p.price==null?null:Number(p.price),compareAtPrice:p.compare_at_price==null?null:Number(p.compare_at_price),featured:bool(p.featured),bestSeller:bool(p.best_seller),newArrival:bool(p.new_arrival),status:p.status,sortOrder:p.sort_order,
     shopifyProductId:p.shopify_product_id,shopifyHandle:p.shopify_handle,features:parseArray<string>(p.features_json),
     variants:(variantsBy.get(p.id)||[]).map((v:any)=>({id:v.id,productId:v.product_id,size:v.size,color:v.color,sku:v.sku,price:v.price==null?null:Number(v.price),stock:v.stock==null?null:Number(v.stock),available:bool(v.available),shopifyVariantId:v.shopify_variant_id,sortOrder:v.sort_order})),
@@ -107,10 +117,10 @@ async function saveProduct(env:Env,body:any){
   const p=body.product,collectionIds:string[]=body.collectionIds||[]
   if(!p?.id||!p?.slug||!p?.name)throw new Error('Producto incompleto')
   const statements:any[]=[
-    env.DB.prepare(`INSERT INTO products(id,slug,name,name_status,subtitle,description,category_id,fit,color,price,compare_at_price,featured,best_seller,new_arrival,status,sort_order,features_json,shopify_product_id,shopify_handle,updated_at)
-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
-    ON CONFLICT(id) DO UPDATE SET slug=excluded.slug,name=excluded.name,name_status=excluded.name_status,subtitle=excluded.subtitle,description=excluded.description,category_id=excluded.category_id,fit=excluded.fit,color=excluded.color,price=excluded.price,compare_at_price=excluded.compare_at_price,featured=excluded.featured,best_seller=excluded.best_seller,new_arrival=excluded.new_arrival,status=excluded.status,sort_order=excluded.sort_order,features_json=excluded.features_json,shopify_product_id=excluded.shopify_product_id,shopify_handle=excluded.shopify_handle,updated_at=CURRENT_TIMESTAMP`)
-      .bind(p.id,p.slug,p.name,p.nameStatus||'provisional',p.subtitle||null,p.description||null,p.categoryId||null,p.fit||null,p.color||null,p.price??null,p.compareAtPrice??null,p.featured?1:0,p.bestSeller?1:0,p.newArrival?1:0,p.status||'draft',p.sortOrder||0,JSON.stringify(p.features||[]),p.shopifyProductId||null,p.shopifyHandle||null),
+    env.DB.prepare(`INSERT INTO products(id,slug,name,name_status,subtitle,description,category_id,fit,color,price,compare_at_price,featured,best_seller,new_arrival,status,sort_order,features_json,shopify_product_id,shopify_handle,fragrance_family,updated_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET slug=excluded.slug,name=excluded.name,name_status=excluded.name_status,subtitle=excluded.subtitle,description=excluded.description,category_id=excluded.category_id,fit=excluded.fit,color=excluded.color,price=excluded.price,compare_at_price=excluded.compare_at_price,featured=excluded.featured,best_seller=excluded.best_seller,new_arrival=excluded.new_arrival,status=excluded.status,sort_order=excluded.sort_order,features_json=excluded.features_json,shopify_product_id=excluded.shopify_product_id,shopify_handle=excluded.shopify_handle,fragrance_family=CASE WHEN ?=1 THEN excluded.fragrance_family ELSE products.fragrance_family END,updated_at=CURRENT_TIMESTAMP`)
+      .bind(p.id,p.slug,p.name,p.nameStatus||'provisional',p.subtitle||null,p.description||null,p.categoryId||null,p.fit||null,p.color||null,p.price??null,p.compareAtPrice??null,p.featured?1:0,p.bestSeller?1:0,p.newArrival?1:0,p.status||'draft',p.sortOrder||0,JSON.stringify(p.features||[]),p.shopifyProductId||null,p.shopifyHandle||null,(typeof p.fragranceFamily==='string'?p.fragranceFamily.trim():'')||null,'fragranceFamily' in p?1:0),
     env.DB.prepare('DELETE FROM variants WHERE product_id=?').bind(p.id),
     env.DB.prepare('DELETE FROM product_collections WHERE product_id=?').bind(p.id)
   ]

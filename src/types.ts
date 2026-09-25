@@ -8,7 +8,7 @@ export interface Category {id:string;slug:string;name:string;enabled:boolean;sor
 export interface Fit {id:string;slug:string;name:string;enabled:boolean;sortOrder:number}
 
 export interface Product {
-  id:string;slug:string;name:string;nameStatus:string;subtitle:string|null;description:string|null;categoryId:string|null;category:string;fit:string|null;color:string|null;
+  id:string;slug:string;name:string;nameStatus:string;subtitle:string|null;description:string|null;categoryId:string|null;category:string;fit:string|null;color:string|null;fragranceFamily:string|null;
   price:number|null;compareAtPrice:number|null;featured:boolean;bestSeller:boolean;newArrival:boolean;status:ProductStatus;sortOrder:number;shopifyProductId:string|null;shopifyHandle:string|null;
   features:string[];variants:Variant[];media:ProductMedia[];collections:Collection[]
 }

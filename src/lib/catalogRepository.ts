@@ -24,7 +24,7 @@ export async function saveProduct(product:Product,collectionIds:string[]):Promis
 
 export async function createBlankProduct():Promise<Product>{
   const id=crypto.randomUUID()
-  return {id,slug:'product-'+Date.now(),name:'NUEVO PRODUCTO',nameStatus:'provisional',subtitle:'',description:'',categoryId:null,category:'',fit:null,color:null,price:null,compareAtPrice:null,featured:false,bestSeller:false,newArrival:true,status:'draft',sortOrder:999,shopifyProductId:null,shopifyHandle:null,features:[],variants:[],media:[],collections:[]}
+  return {id,slug:'product-'+Date.now(),name:'NUEVO PRODUCTO',nameStatus:'provisional',subtitle:'',description:'',categoryId:null,category:'',fit:null,color:null,fragranceFamily:null,price:null,compareAtPrice:null,featured:false,bestSeller:false,newArrival:true,status:'draft',sortOrder:999,shopifyProductId:null,shopifyHandle:null,features:[],variants:[],media:[],collections:[]}
 }
 
 export async function duplicateProduct(source:Product):Promise<string>{
