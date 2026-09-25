@@ -89,3 +89,16 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
 .variant-editor>div{grid-template-columns:110px 130px 1fr 120px 100px 120px auto}
 @media(max-width:1100px){.variant-editor>div{grid-template-columns:repeat(3,1fr);padding-bottom:10px;border-bottom:1px solid var(--line)}}
 @media(max-width:768px){.brand img{height:38px;max-width:80px}.footer-brand img{height:52px}.variant-editor>div{grid-template-columns:1fr 1fr;padding-bottom:10px;border-bottom:1px solid var(--line)}}
+
+/* V4.4F categories: the headline may use part of the column gap but never enters the image stage.
+   Font size is capped by the real column width (7.9em ~= widest line "SECCIÓN."; 16px clearance). Only side-by-side ranges. */
+@media(min-width:1025px){
+  .collections{grid-template-columns:minmax(330px,1fr) minmax(220px,.46fr) minmax(360px,1fr)}
+  .collections-heading{container-type:inline-size}
+  .collections-heading h2{font-size:min(clamp(48px,5.1vw,78px),calc((100cqw + clamp(28px,3.6vw,58px) - 16px)/7.9))}
+}
+@media(min-width:769px) and (max-width:1024px){
+  .collections{grid-template-columns:minmax(280px,1.08fr) 190px minmax(300px,1fr)}
+  .collections-heading{container-type:inline-size}
+  .collections-heading h2{font-size:min(clamp(42px,5.5vw,56px),calc((100cqw + 24px - 16px)/7.9))}
+}

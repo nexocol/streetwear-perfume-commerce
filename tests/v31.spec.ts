@@ -169,9 +169,11 @@ async function settleSection(page:Page,selector:string){
 
 test('V4.2 micro polish geometry and trust affordance',async({page})=>{
   await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/');await waitStore(page);await prepareVisualEvidence(page)
-  const heading=page.locator('.collections-heading h2');const stage=page.locator('.category-stage')
-  const [h,s]=await Promise.all([heading.boundingBox(),stage.boundingBox()])
-  expect(h&&s&&h.x+h.width<=s.x+1,'Categories headline must not intrude into image stage').toBeTruthy()
+  const stage=page.locator('.category-stage')
+  // Measure the rendered TEXT (not the h2 box): the box can fit its column while the glyphs overflow into the image.
+  const textRight=await page.locator('.collections-heading h2').evaluate((el:HTMLElement)=>{const r=document.createRange();r.selectNodeContents(el);return Math.max(...[...r.getClientRects()].map(x=>x.right))})
+  const s=await stage.boundingBox()
+  expect(s&&textRight<=s.x+1,'Categories headline text must not intrude into image stage').toBeTruthy()
   const bridge=page.locator('.editorial-title-bridge');await bridge.scrollIntoViewIfNeeded();await expect(bridge).toBeVisible()
   const trust=page.locator('.trust-rail button').first();await trust.scrollIntoViewIfNeeded();await trust.hover();await page.waitForTimeout(250)
   const view=trust.locator('.trust-view');await expect(view).toBeVisible();expect(Number(await view.evaluate(el=>getComputedStyle(el).opacity))).toBeGreaterThan(.9)
