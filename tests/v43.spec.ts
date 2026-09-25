@@ -97,7 +97,8 @@ test('V4.3 perfume info structure',async({page})=>{
   await mockApi(page);await page.goto('/product/'+seedCatalog.products.find(p=>p.category==='Perfumes')!.slug);await waitReady(page);await assertNoLegacyNames(page)
   await expect(page.getByText('COMPOSICIÓN / NOTAS')).toBeVisible()
   await expect(page.getByText('NOTAS PRINCIPALES')).toBeVisible()
-  await expect(page.getByText('FAMILIA OLFATIVA')).toBeVisible()
+  await expect(page.getByText('FAMILIA OLFATIVA')).toHaveCount(2) // product-facts cell + accordion detail (intentional since V4.4G.1)
+  await expect(page.getByText('FAMILIA OLFATIVA').first()).toBeVisible()
   await expect(page.getByText('Por confirmar').first()).toBeVisible()
 })
 

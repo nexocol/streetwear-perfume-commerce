@@ -82,6 +82,62 @@ test.describe('V4.4G perfume content on the PDP',()=>{
   })
 })
 
+test.describe('V4.4G.1 perfume PDP semantics',()=>{
+  const label=(page:Page)=>page.locator('.pdp-info > span').first()
+  const factCells=(page:Page)=>page.locator('.product-facts > div')
+  for(const v of [VALENTINO,LATTAFA]){
+    test(`${v.id}: perfume label + facts (no clothing wording)`,async({page})=>{
+      await mockApi(page,verifiedCatalog())
+      await page.goto('/product/'+slug(v.id))
+      await expect(label(page)).toHaveText('PERFUMES / EAU DE PARFUM')
+      const info=page.locator('.pdp-info')
+      await expect(info).not.toContainText('ESTILO POR CONFIRMAR')
+      await expect(info).not.toContainText('ESTILO / FIT')
+      await expect(info).not.toContainText('ESTILO / SUBTIPO')
+      await expect(factCells(page)).toHaveCount(2)
+      await expect(factCells(page).nth(0).locator('span')).toHaveText('FAMILIA OLFATIVA')
+      await expect(factCells(page).nth(0).locator('b')).toHaveText(v.fragranceFamily)
+      await expect(factCells(page).nth(1).locator('span')).toHaveText('DISPONIBILIDAD')
+      await expect(factCells(page).nth(1).locator('b')).toHaveText('DISPONIBLE')
+      // accordion is unchanged: family also appears inside the notes detail
+      await expect(page.locator('.perfume-profile div',{hasText:'FAMILIA OLFATIVA'}).locator('b')).toHaveText(v.fragranceFamily)
+      await expect(page.locator('summary',{hasText:'COMPOSICIÓN / NOTAS'})).toBeVisible()
+    })
+  }
+  test('perfume with NULL subtitle uses PERFIL OLFATIVO',async({page})=>{
+    const c=verifiedCatalog();c.products.find(p=>p.id==='perfume-01')!.subtitle=null
+    await mockApi(page,c)
+    await page.goto('/product/'+slug('perfume-01'))
+    await expect(label(page)).toHaveText('PERFUMES / PERFIL OLFATIVO')
+  })
+  test('subtitle is not hardcoded: another concentration is shown as given',async({page})=>{
+    const c=verifiedCatalog();c.products.find(p=>p.id==='perfume-02')!.subtitle='Extrait de Parfum'
+    await mockApi(page,c)
+    await page.goto('/product/'+slug('perfume-02'))
+    await expect(label(page)).toHaveText('PERFUMES / EXTRAIT DE PARFUM')
+  })
+  test('perfume with NULL fragranceFamily: fact shows Por confirmar',async({page})=>{
+    const c=verifiedCatalog();c.products.find(p=>p.id==='perfume-02')!.fragranceFamily=null
+    await mockApi(page,c)
+    await page.goto('/product/'+slug('perfume-02'))
+    await expect(factCells(page).nth(0).locator('span')).toHaveText('FAMILIA OLFATIVA')
+    await expect(factCells(page).nth(0).locator('b')).toHaveText('Por confirmar')
+  })
+  test('clothing keeps ESTILO / SUBTIPO (jeans) and ESTILO / FIT (others) with the old label',async({page})=>{
+    await mockApi(page,verifiedCatalog())
+    const denim=seedCatalog.products.find(p=>p.category==='Jeans')!
+    await page.goto('/product/'+denim.slug)
+    await expect(factCells(page).nth(0).locator('span')).toHaveText('ESTILO / SUBTIPO')
+    await expect(label(page)).toContainText(/^Pantalones \/ /)
+    await expect(page.locator('.pdp-info')).not.toContainText('FAMILIA OLFATIVA')
+    const tee=seedCatalog.products.find(p=>p.category==='Streetwear')!
+    await page.goto('/product/'+tee.slug)
+    await expect(factCells(page).nth(0).locator('span')).toHaveText('ESTILO / FIT')
+    await expect(label(page)).toContainText(/^Camisetas \/ /)
+    await expect(page.locator('.pdp-info')).not.toContainText('FAMILIA OLFATIVA')
+  })
+})
+
 test.describe('V4.4G search',()=>{
   const cases:[string,string[]][]=[['valentino',['perfume-01']],['born in roma',['perfume-01']],['lattafa',['perfume-02']],['noble blush',['perfume-02']],['perfume',['perfume-01','perfume-02']]]
   for(const [q,ids] of cases){

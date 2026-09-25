@@ -17,9 +17,9 @@ export function ProductInfo({product}:{product:Product}){
   const perfume=product.category==='Perfumes'
   async function add(){if(!variant||unavailable)return;await commerce.addLine(product,variant);ui.showToast(name+' agregado');ui.openCart()}
   return <aside className="pdp-info">
-    <span>{displayCategory(product.category)} / {style||'ESTILO POR CONFIRMAR'}</span><h1>{name}</h1><p className="subtitle">{subtitle}</p><div className="price">{money(displayPrice,'detail')}</div><p>{description}</p>
+    <span>{perfume?displayCategory(product.category).toLocaleUpperCase('es')+' / '+(product.subtitle?.trim()||'PERFIL OLFATIVO').toLocaleUpperCase('es'):<>{displayCategory(product.category)} / {style||'ESTILO POR CONFIRMAR'}</>}</span><h1>{name}</h1><p className="subtitle">{subtitle}</p><div className="price">{money(displayPrice,'detail')}</div><p>{description}</p>
     {colorsAvailable.length>1&&<p className="pdp-colors"><span>COLORES DISPONIBLES</span> {colorsAvailable.map(colorLabel).join(' · ')}</p>}
-    <div className="product-facts"><div><span>{product.category==='Jeans'?'ESTILO / SUBTIPO':'ESTILO / FIT'}</span><b>{style||'Por confirmar'}</b></div><div><span>DISPONIBILIDAD</span><b>{variant?.stock===0?'AGOTADO':variant?'DISPONIBLE':'SELECCIONA TALLA'}</b></div></div>
+    <div className="product-facts">{perfume?<div><span>FAMILIA OLFATIVA</span><b>{product.fragranceFamily||'Por confirmar'}</b></div>:<div><span>{product.category==='Jeans'?'ESTILO / SUBTIPO':'ESTILO / FIT'}</span><b>{style||'Por confirmar'}</b></div>}<div><span>DISPONIBILIDAD</span><b>{variant?.stock===0?'AGOTADO':variant?'DISPONIBLE':'SELECCIONA TALLA'}</b></div></div>
     {selection.hasColors&&<>
       <div className="size-heading"><span>COLOR</span><b className="color-current" data-testid="selected-color">{colorLabel(selection.color||'')}</b></div>
       <div className="color-options" role="group" aria-label="Color">{selection.colors.map(c=>{const buyable=product.variants.some(v=>(v.color||'').trim()===c&&isBuyable(v));return <button key={c||'_'} className={selection.color===c?'selected':''} aria-pressed={selection.color===c} disabled={!buyable} onClick={()=>selection.selectColor(c)}>{colorLabel(c)}</button>})}</div>
