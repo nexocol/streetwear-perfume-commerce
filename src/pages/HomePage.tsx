@@ -74,7 +74,7 @@ export function HomePage(){
     {editorial&&<section id="editorial" className="editorial" aria-labelledby="editorial-title">
       <div className="editorial-meta"><span>05 / SELECCIÓN</span><span>DROP / 001</span></div>
       <div className="editorial-image" data-reveal="image"><ImageWithFallback src={editorial.media[0]?.publicUrl||cfg.editorialImageUrl||undefined} alt="Prenda real de la selección" loading="lazy"/></div>
-      <div className="editorial-copy" data-reveal="mask"><h2 id="editorial-title"><span>ENCUENTRA</span><span className="editorial-title-bridge">TU ESTILO</span><i>AQUÍ.</i></h2><p>Explora las prendas disponibles y entra directamente al producto que quieres comprar.</p><Link to="/shop" className="text-action">VER TIENDA ↗</Link></div>
+      <div className="editorial-copy" data-reveal="mask"><h2 id="editorial-title"><span className="editorial-title-bridge">ENCUENTRA</span><span className="editorial-title-bridge">TU ESTILO</span><i>AQUÍ.</i></h2><p>Explora las prendas disponibles y entra directamente al producto que quieres comprar.</p><Link to="/shop" className="text-action">VER TIENDA ↗</Link></div>
       <span className="editorial-product-label">{displayProductName(editorial)}</span>
     </section>}
 

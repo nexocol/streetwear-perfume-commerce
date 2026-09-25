@@ -174,7 +174,7 @@ test('V4.2 micro polish geometry and trust affordance',async({page})=>{
   const textRight=await page.locator('.collections-heading h2').evaluate((el:HTMLElement)=>{const r=document.createRange();r.selectNodeContents(el);return Math.max(...[...r.getClientRects()].map(x=>x.right))})
   const s=await stage.boundingBox()
   expect(s&&textRight<=s.x+1,'Categories headline text must not intrude into image stage').toBeTruthy()
-  const bridge=page.locator('.editorial-title-bridge');await bridge.scrollIntoViewIfNeeded();await expect(bridge).toBeVisible()
+  const bridge=page.locator('.editorial-title-bridge');await expect(bridge).toHaveText(['ENCUENTRA','TU ESTILO']);await bridge.first().scrollIntoViewIfNeeded();await expect(bridge.first()).toBeVisible();await expect(bridge.last()).toBeVisible()
   const trust=page.locator('.trust-rail button').first();await trust.scrollIntoViewIfNeeded();await trust.hover();await page.waitForTimeout(250)
   const view=trust.locator('.trust-view');await expect(view).toBeVisible();expect(Number(await view.evaluate(el=>getComputedStyle(el).opacity))).toBeGreaterThan(.9)
 
