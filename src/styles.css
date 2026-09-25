@@ -125,3 +125,12 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
 @media(max-width:1319px){
   .collection-links .cta-text{display:none}
 }
+
+/* V4.4F.2 featured heading: the two-line title ("DESTACADAS" ~10.8em) is wider than its 1.2fr column and max-width:12ch, so the glyphs
+   overflowed into the "VER TODO" column at every desktop width. The title column now never shrinks below its content
+   (minmax(max-content,1.2fr)), the eyebrow column absorbs the difference; on wide screens the composition is unchanged. */
+@media(min-width:1025px){
+  .section-heading{grid-template-columns:minmax(130px,.5fr) minmax(max-content,1.2fr) auto}
+  .section-heading h2{max-width:none}
+  .section-heading>a{justify-self:end} /* the auto track may be stretched by leftover space: keep the link on the right edge as before */
+}

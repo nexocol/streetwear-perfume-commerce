@@ -84,6 +84,43 @@ for(const w of WIDTHS){
   })
 }
 
+const HEADING_WIDTHS=[1440,1280,1200,1150,1149,1100,1025,1024,900,430]
+for(const w of HEADING_WIDTHS){
+  test(`V4.4F.2 featured heading: title never touches "VER TODO", no overflow @${w}`,async({page})=>{
+    await page.setViewportSize({width:w,height:900})
+    await mockApi(page,fiveCategoryCatalog())
+    await page.goto('/')
+    await expect(page.locator('.featured-rail .card')).toHaveCount(4)
+    await page.evaluate(()=>document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el=>el.classList.add('visible')))
+    await page.locator('.featured-section').scrollIntoViewIfNeeded();await page.waitForTimeout(400)
+    const g=await page.evaluate(()=>{
+      const sh=document.querySelector('.section-heading') as HTMLElement
+      const h2=sh.querySelector('h2') as HTMLElement,link=sh.querySelector(':scope > a') as HTMLElement,eyebrow=sh.children[0] as HTMLElement
+      const tr=document.createRange();tr.selectNodeContents(h2)
+      const headingRight=Math.max(...[...tr.getClientRects()].map(r=>r.right)),headingLeft=Math.min(...[...tr.getClientRects()].map(r=>r.left))
+      const er=document.createRange();er.selectNodeContents(eyebrow)
+      const eyebrowRight=Math.max(...[...er.getClientRects()].map(r=>r.right))
+      const linkVisible=getComputedStyle(link).display!=='none'
+      const cards=[...document.querySelectorAll('.featured-rail .card')].map(c=>{const b=c.getBoundingClientRect();return {l:b.left,r:b.right}})
+      const rail=document.querySelector('.featured-rail') as HTMLElement
+      const sideBySide=eyebrow.getBoundingClientRect().bottom>h2.getBoundingClientRect().top+2 // stacked (<=768): eyebrow sits above the title
+      return {headingRight,headingLeft,eyebrowRight,sideBySide,linkVisible,ctaLeft:linkVisible?link.getBoundingClientRect().left:Infinity,sectionRight:sh.getBoundingClientRect().right,cards,ownScroll:getComputedStyle(rail).overflowX!=='visible',sw:document.documentElement.scrollWidth,vw:innerWidth}
+    })
+    expect(g.sw,`scrollWidth ${g.sw} vs ${g.vw}`).toBeLessThanOrEqual(g.vw+1)
+    // the title glyphs stay inside the section box (the old layout overflowed it on the right)
+    expect(g.headingRight,'title must stay inside its section').toBeLessThanOrEqual(g.sectionRight+1)
+    // headingRight < ctaLeft - 16 whenever the CTA is visible
+    if(g.linkVisible)expect(g.headingRight,`title right ${g.headingRight} vs CTA left ${g.ctaLeft}`).toBeLessThan(g.ctaLeft-16)
+    // eyebrow column never runs into the title
+    if(g.sideBySide)expect(g.eyebrowRight,'eyebrow vs title').toBeLessThan(g.headingLeft-8)
+    // Featured cards keep fitting: grid mode -> every card inside the viewport; own-scroll mode (<=1024) -> first card inside, page not widened
+    if(g.ownScroll)expect(g.cards[0].r).toBeLessThanOrEqual(g.vw+1)
+    else for(const c of g.cards){expect(c.l).toBeGreaterThanOrEqual(-1);expect(c.r).toBeLessThanOrEqual(g.vw+1)}
+    // CTA availability: unchanged at <=1024 (hidden), visible above
+    expect(g.linkVisible).toBe(w>=1025)
+  })
+}
+
 test('V4.4F.1 Shop and PDP have no horizontal overflow at every intermediate width',async({page})=>{
   await mockApi(page,fiveCategoryCatalog())
   for(const path of ['/shop','/product/'+seedCatalog.products[0].slug]){
