@@ -145,3 +145,29 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
   .editorial-title-bridge{white-space:nowrap;overflow-wrap:normal;word-break:normal}
   .editorial-copy h2{font-size:min(clamp(46px,13vw,76px),calc((100vw - 36px)/10.5))}
 }
+
+/* V4.5: category quick nav on /shop (always visible; the FILTRAR / ORDENAR panel stays as is) + compact categories under TIENDA in the mobile menu. */
+.shop-cats{display:flex;align-items:stretch;gap:0;padding:0 var(--pad);border-bottom:1px solid var(--line);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.shop-cats::-webkit-scrollbar{display:none}
+.shop-cats a{position:relative;flex:0 0 auto;display:flex;align-items:baseline;gap:7px;min-height:58px;padding:0 clamp(16px,2.4vw,34px);color:var(--muted);font:800 clamp(13px,1.15vw,15px)/1 var(--display);letter-spacing:.02em;text-transform:uppercase;text-decoration:none;white-space:nowrap;align-self:stretch;align-items:center;transition:color .24s var(--ease)}
+.shop-cats a:first-child{padding-left:0}
+.shop-cats a+a::before{content:'';position:absolute;left:0;top:22px;bottom:22px;width:1px;background:var(--line)}
+.shop-cats a sup{font:700 9px/1 var(--ui);letter-spacing:.06em;color:var(--muted);align-self:flex-start;margin-top:22px}
+.shop-cats a::after{content:'';position:absolute;left:clamp(16px,2.4vw,34px);right:clamp(16px,2.4vw,34px);bottom:-1px;height:3px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .32s var(--ease)}
+.shop-cats a:first-child::after{left:0}
+.shop-cats a:hover,.shop-cats a:focus-visible{color:var(--ink)}
+.shop-cats a:hover::after,.shop-cats a:focus-visible::after,.shop-cats a.active::after{transform:scaleX(1)}
+.shop-cats a.active{color:var(--ink)}
+.shop-cats a.active sup{color:var(--ink)}
+.shop-cats a:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+@media(max-width:768px){
+  .shop-cats{padding:0 18px;scroll-padding:0 18px}
+  .shop-cats a{min-height:54px;padding:0 16px;font-size:13px}
+  .shop-cats a sup{margin-top:20px}
+  .shop-cats a::after{left:16px;right:16px}
+  .shop-cats a:first-child::after{left:0}
+  .shop-cats a+a::before{top:18px;bottom:18px}
+}
+.mobile-menu nav .mobile-menu-cats{display:flex;flex-direction:column;margin:6px 0 14px 4px;padding-left:16px;border-left:1px solid #ffffff33}
+.mobile-menu nav .mobile-menu-cats a{display:flex;align-items:center;min-height:40px;font:600 clamp(16px,4.6vw,20px)/1.1 var(--ui);letter-spacing:.01em;color:#ffffffcc;text-decoration:none}
+.mobile-menu nav .mobile-menu-cats a:hover,.mobile-menu nav .mobile-menu-cats a:focus-visible{color:var(--acid)}

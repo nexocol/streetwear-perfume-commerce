@@ -70,6 +70,16 @@ export function activeCatalogCategories(catalog:CatalogSnapshot){
     .sort((a,b)=>a.sortOrder-b.sortOrder)
 }
 
+/** Active categories as shop links (label, /shop?cat=<real category>, active product count): one source for the /shop quick nav and the mobile menu. */
+export function categoryShopLinks(catalog:CatalogSnapshot){
+  return activeCatalogCategories(catalog).map(category=>({
+    value:category.name,
+    label:displayCategory(category.name),
+    to:'/shop?cat='+encodeURIComponent(category.name),
+    count:catalog.products.filter(product=>product.status==='active'&&(product.categoryId===category.id||product.category===category.name)).length,
+  }))
+}
+
 export function categoryListText(labels:string[]){
   if(!labels.length)return 'Productos'
   if(labels.length===1)return labels[0]
