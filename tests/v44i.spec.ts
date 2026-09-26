@@ -81,6 +81,14 @@ test.describe('V4.4I tee-01 final motion images',()=>{
     for(const color of COLORS)for(const size of SIZES)expect(lines).toContain(`COLOR / ${color}|TALLA / ${size}`)
   })
 
+  for(const width of [768,430,390])test(`Editorial title @${width}: ENCUENTRA / TU ESTILO / AQUÍ. each on one line, inside the viewport`,async({page})=>{
+    await page.setViewportSize({width,height:900});await mockApi(page);await page.goto('/')
+    await page.locator('#editorial-title').scrollIntoViewIfNeeded()
+    const m=await page.evaluate(()=>[...document.querySelectorAll('#editorial-title > *')].map(e=>{const r=document.createRange();r.selectNodeContents(e);const rects=[...r.getClientRects()];return {t:e.textContent,lines:new Set(rects.map(x=>Math.round(x.top))).size,right:Math.max(...rects.map(x=>x.right)),vw:document.documentElement.clientWidth}}))
+    expect(m.map(x=>x.t)).toEqual(['ENCUENTRA','TU ESTILO','AQUÍ.'])
+    for(const x of m){expect(x.lines,x.t+' must not wrap').toBe(1);expect(x.right,x.t+' must fit inside the gutters').toBeLessThanOrEqual(x.vw-18+1)}
+  })
+
   for(const width of [1440,1024,768,430,390])test(`no horizontal overflow at ${width}: Home and PDP`,async({page})=>{
     await page.setViewportSize({width,height:width>=1024?1000:900});await mockApi(page)
     for(const path of ['/','/product/'+slug]){

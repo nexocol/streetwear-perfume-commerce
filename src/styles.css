@@ -138,3 +138,10 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
 /* V4.4H: the perfume PDP trust rail has 3 cards (no size guide). Same look, just re-flowed so no empty cell is left. */
 @media(min-width:1025px){.trust-rail--3{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:1024px){.trust-rail--3 button:nth-child(3){grid-column:1/-1;border-right:0}}
+
+/* V4.4I: ENCUENTRA / TU ESTILO never break mid-word on mobile (h2 uses overflow-wrap:anywhere <=768px);
+   the title size scales with the viewport so the widest word (~10.4em) always fits the 18px gutters. */
+@media(max-width:768px){
+  .editorial-title-bridge{white-space:nowrap;overflow-wrap:normal;word-break:normal}
+  .editorial-copy h2{font-size:min(clamp(46px,13vw,76px),calc((100vw - 36px)/10.5))}
+}
