@@ -9,7 +9,7 @@ const teeSlug=seedCatalog.products.find(p=>p.id==='tee-01')!.slug
 // tee-01 exactly as the V4.5 proposal leaves it: 3 clean images first, the client's originals AFTER them, the old 3-shirts photo last.
 const TEE_MEDIA=[
   ['tee-01-hero-blanca-v1','hero','white'],['tee-01-front-verde-v1','front','mint'],['tee-01-detail-negra-v1','detail','black'],
-  ['tee-01-store-1-v1','editorial','store'],['tee-01-store-2-v1','editorial','group'],
+  ['tee-01-store-1-v1','editorial','group'],
 ] as const
 
 function media(pid:string,list:readonly (readonly [string,string,string])[]){
@@ -104,6 +104,17 @@ test.describe('V4.5 category quick nav on /shop',()=>{
   })
 })
 
+test.describe('V4.5 mobile menu: no clipped words',()=>{
+  for(const width of [1024,768,430,390])test(`@${width}: FRAGRANCE / EDITORIAL / TIENDA / BUSCAR fit inside the gutters, no overflow`,async({page})=>{
+    await page.setViewportSize({width,height:900});await mockApi(page);await page.goto('/shop')
+    await page.locator('.nav-menu').click();await expect(page.locator('.mobile-menu.open')).toBeVisible();await page.waitForTimeout(600)
+    const m=await page.evaluate(()=>{const vw=document.documentElement.clientWidth;return {docOv:document.documentElement.scrollWidth-vw,items:[...document.querySelectorAll<HTMLElement>('.mobile-menu nav > a, .mobile-menu nav > button')].map(a=>{const r=document.createRange();r.selectNodeContents(a);const b=r.getBoundingClientRect();return {t:a.textContent,right:b.right,clipped:a.scrollWidth>a.clientWidth+1,vw}})}})
+    expect(m.items.map(i=>i.t)).toEqual(['TIENDA','FRAGRANCE','EDITORIAL','BUSCAR'])
+    for(const i of m.items){expect(i.clipped,i.t+' clipped').toBe(false);expect(i.right,i.t+' right edge').toBeLessThanOrEqual(i.vw-18+1)}
+    expect(m.docOv).toBeLessThanOrEqual(0)
+  })
+})
+
 test.describe('V4.5 tee-01 media safety (the old 3-shirts photo can never be primary/hover/category/editorial)',()=>{
   test('Featured card: primary = clean white, hover = clean mint; originals stay out of the card',async({page})=>{
     await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/')
@@ -127,16 +138,17 @@ test.describe('V4.5 tee-01 media safety (the old 3-shirts photo can never be pri
   test('PDP gallery: clean hero stays media[0]; tee-01 keeps white/mint/black first and the group photo last',async({page})=>{
     await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/product/'+teeSlug)
     const order=await page.locator('.gallery img').evaluateAll(a=>a.map(i=>(i as HTMLImageElement).getAttribute('src')!.split('/').pop()))
-    expect(order).toEqual(['white.png','mint.png','black.png','store.png','group.png'])
+    expect(order).toEqual(['white.png','mint.png','black.png','group.png'])
     await expect(page.locator('.gallery figure').first()).toHaveClass(/hero-shot/)
-    await expect(page.locator('.gallery-indicator')).toHaveText('01 / 05')
+    await expect(page.locator('.gallery-indicator')).toHaveText('01 / 04')
     await page.goto('/product/qa-tee-2')
     expect(await page.locator('.gallery img').evaluateAll(a=>a.map(i=>(i as HTMLImageElement).getAttribute('src')!.split('/').pop()))).toEqual(['hero2.png','store2.png','store3.png'])
   })
   test('catalog data rule: for every camiseta media[0] is the clean hero and the group photo is never in the first 3 positions',async()=>{
     const tee=catalog().products.find(p=>p.id==='tee-01')!
-    expect(tee.media.map(m=>m.sortOrder)).toEqual([1,2,3,4,5]);expect(tee.media[0].mediaType).toBe('hero')
+    expect(tee.media.map(m=>m.sortOrder)).toEqual([1,2,3,4]);expect(tee.media[0].mediaType).toBe('hero')
     expect(tee.media.slice(0,3).every(m=>/(white|mint|black)\.png$/.test(m.publicUrl!))).toBe(true)
-    expect(tee.media.findIndex(m=>/group\.png$/.test(m.publicUrl!))).toBeGreaterThanOrEqual(3)
+    expect(tee.media.findIndex(m=>/group\.png$/.test(m.publicUrl!))).toBe(3)
+    expect(tee.media.length).toBe(4)
   })
 })

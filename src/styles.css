@@ -169,5 +169,7 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
   .shop-cats a+a::before{top:18px;bottom:18px}
 }
 .mobile-menu nav .mobile-menu-cats{display:flex;flex-direction:column;margin:6px 0 14px 4px;padding-left:16px;border-left:1px solid #ffffff33}
-.mobile-menu nav .mobile-menu-cats a{display:flex;align-items:center;min-height:40px;font:600 clamp(16px,4.6vw,20px)/1.1 var(--ui);letter-spacing:.01em;color:#ffffffcc;text-decoration:none}
+.mobile-menu nav .mobile-menu-cats a{display:flex;align-items:center;min-height:40px;font:600 clamp(15px,4vw,19px)/1.1 var(--ui);letter-spacing:.01em;color:#ffffffcc;text-decoration:none}
 .mobile-menu nav .mobile-menu-cats a:hover,.mobile-menu nav .mobile-menu-cats a:focus-visible{color:var(--acid)}
+/* V4.5: FRAGRANCE (the widest menu word, ~10.4em) was clipped by the fixed clamp() size; cap the size so it always fits between the gutters. Hierarchy stays: still 2x+ the category links. */
+.mobile-menu nav>a,.mobile-menu nav>button{font-size:min(clamp(48px,11vw,105px),calc((100vw - 2*var(--pad))/10.6))}
