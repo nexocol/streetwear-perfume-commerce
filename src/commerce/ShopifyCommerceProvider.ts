@@ -1,18 +1,24 @@
-import type { Product, Variant } from '../types'
+import type { CommerceAdapter, CheckoutResult } from './types'
+import { useLocalCart } from './useLocalCart'
 
-export interface ShopifyCommercePort {
-  createCart():Promise<{id:string;checkoutUrl:string}>
-  addLine(cartId:string,product:Product,variant:Variant,quantity:number):Promise<void>
-  updateLine(cartId:string,lineId:string,quantity:number):Promise<void>
-  removeLine(cartId:string,lineId:string):Promise<void>
-  checkoutUrl(cartId:string):Promise<string>
-}
-export class ShopifyProvider implements ShopifyCommercePort {
-  constructor(private domain:string,private token:string){}
-  private unavailable():never{throw new Error('Shopify todavía no está conectado. Configura Storefront API y mappings antes de activar este provider.')}
-  async createCart(){return this.unavailable()}
-  async addLine(_cartId:string,_product:Product,_variant:Variant,_quantity:number){this.unavailable()}
-  async updateLine(_cartId:string,_lineId:string,_quantity:number){this.unavailable()}
-  async removeLine(_cartId:string,_lineId:string){this.unavailable()}
-  async checkoutUrl(_cartId:string){return this.unavailable()}
+// Cart stays local (see useLocalCart); only checkout crosses the network, and only to our
+// own Worker — the browser never talks to Shopify directly and never sees a Shopify ID.
+export function useShopifyCommerce():CommerceAdapter{
+  const cart=useLocalCart()
+  async function startCheckout():Promise<CheckoutResult>{
+    if(cart.lines.length===0)return {ok:false,error:'El carrito está vacío.'}
+    try{
+      const res=await fetch('/api/shopify/checkout',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({lines:cart.lines.map(l=>({variantId:l.variantId,quantity:l.quantity}))})
+      })
+      const body=await res.json().catch(()=>null)
+      if(!res.ok||!body?.checkoutUrl)return {ok:false,error:body?.error||'No fue posible iniciar el checkout.'}
+      return {ok:true,checkoutUrl:body.checkoutUrl}
+    }catch(error){
+      return {ok:false,error:error instanceof Error?error.message:'No fue posible iniciar el checkout.'}
+    }
+  }
+  return {...cart,checkoutEnabled:true,startCheckout}
 }

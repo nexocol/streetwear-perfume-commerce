@@ -1,0 +1,4 @@
+# Local-only Worker secrets (wrangler dev). Copy to .dev.vars (gitignored) and fill in.
+# Never commit real values. In production this is set with:
+#   npx wrangler secret put SHOPIFY_STOREFRONT_PRIVATE_TOKEN
+SHOPIFY_STOREFRONT_PRIVATE_TOKEN=

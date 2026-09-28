@@ -12,7 +12,8 @@
     "deploy": "npm run build && wrangler deploy",
     "deploy:v3": "npm run build && wrangler deploy -c wrangler.v3.jsonc",
     "qa": "playwright test",
-    "qa:migration": "node scripts/migration-qa.mjs"
+    "qa:migration": "node scripts/migration-qa.mjs",
+    "qa:shopify": "node scripts/shopify-qa.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",

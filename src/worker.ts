@@ -1,8 +1,9 @@
 import { SCHEMA_SQL, SEED_SQL, BASE_SCHEMA_VERSION, SCHEMA_VERSION, MIGRATION_V2_COLUMN, MIGRATION_V2_SQL } from './server/schema'
+import { shopifyConfigured, shopifyHealth, shopifyCartCreate, shopifyFetchOverlay, toVariantGid, ShopifyUserError, type ShopifyEnv } from './server/shopify'
 
 type AccessIdentity={email?:string|null}
 type AccessContext={access?:{getIdentity:()=>Promise<AccessIdentity|null>}}
-type Env={
+type Env=ShopifyEnv&{
   DB:any
   MEDIA:any
   ASSETS:{fetch:(request:Request)=>Promise<Response>}
@@ -77,6 +78,37 @@ async function audit(env:Env,email:string|null,action:string,entityType?:string,
     .bind(crypto.randomUUID(),email,action,entityType||null,entityId||null).run()
 }
 
+const OVERLAY_TTL_MS=45_000
+let overlayCache:{key:string;expiresAt:number;data:Map<string,any>}|null=null
+async function getShopifyOverlayCached(env:Env,productIds:string[]){
+  const key=productIds.slice().sort().join(',')
+  if(overlayCache&&overlayCache.key===key&&overlayCache.expiresAt>Date.now())return overlayCache.data
+  const data=await shopifyFetchOverlay(env,productIds)
+  overlayCache={key,expiresAt:Date.now()+OVERLAY_TTL_MS,data}
+  return data
+}
+async function applyShopifyOverlay(env:Env,products:any[]){
+  const mappedIds=products.map(p=>p.shopifyProductId).filter(Boolean)
+  if(mappedIds.length===0)return
+  let overlay:Map<string,any>
+  try{overlay=await getShopifyOverlayCached(env,mappedIds)}
+  catch(error){console.error('Shopify overlay fetch failed, keeping D1 values',error);return}
+  for(const p of products){
+    if(!p.shopifyProductId)continue
+    const op=overlay.get(p.shopifyProductId)
+    if(!op)continue
+    const byGid=new Map(op.variants.map((v:any)=>[v.id,v]))
+    for(const v of p.variants){
+      if(!v.shopifyVariantId)continue
+      const ov:any=byGid.get(toVariantGid(v.shopifyVariantId))
+      if(!ov)continue
+      v.price=ov.price
+      v.stock=ov.quantityAvailable
+      v.available=ov.availableForSale
+    }
+  }
+}
+
 async function getCatalog(env:Env,includeInactive=false){
   await ensureDatabase(env)
   const productsSql=`SELECT p.*,c.name AS category_name FROM products p LEFT JOIN categories c ON c.id=p.category_id ${includeInactive?'':'WHERE p.status="active"'} ORDER BY p.sort_order,p.name`
@@ -103,6 +135,7 @@ async function getCatalog(env:Env,includeInactive=false){
     media:(mediaBy.get(p.id)||[]).map((m:any)=>({id:m.id,productId:m.product_id,mediaType:m.media_type,storagePath:m.r2_key,publicUrl:m.r2_key?'/api/media/'+encodeURIComponent(m.id):m.public_url,alt:m.alt,sortOrder:m.sort_order})),
     collections:(colsBy.get(p.id)||[]).map((c:any)=>({id:c.id,slug:c.slug,name:c.name,enabled:bool(c.enabled),sortOrder:c.sort_order}))
   }))
+  if(bool(site?.shopify_enabled)&&shopifyConfigured(env))await applyShopifyOverlay(env,products)
   return {
     products,
     categories:(categoriesRes.results||[]).map((r:any)=>({id:r.id,slug:r.slug,name:r.name,enabled:bool(r.enabled),sortOrder:r.sort_order})),
@@ -157,6 +190,50 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
     const data=await getCatalog(env,false)
     return json(data,200,{'Cache-Control':'public, max-age=30, stale-while-revalidate=60'})
   }
+
+  if(request.method==='GET'&&path==='/api/shopify/health'){
+    const apiVersion=env.SHOPIFY_STOREFRONT_API_VERSION||null
+    if(!shopifyConfigured(env))return json({ok:false,configured:false,apiVersion},503)
+    try{
+      const {shopName,currency}=await shopifyHealth(env)
+      return json({ok:true,configured:true,shopName,currency,apiVersion},200)
+    }catch(error){
+      return json({ok:false,configured:true,apiVersion,error:error instanceof Error?error.message:'Error desconocido'},503)
+    }
+  }
+
+  if(request.method==='POST'&&path==='/api/shopify/checkout'){
+    let body:any
+    try{body=await parseJson(request)}catch{return json({error:'JSON inválido'},400)}
+    const lines=Array.isArray(body?.lines)?body.lines:null
+    if(!lines||lines.length===0)return json({error:'lines es requerido y no puede estar vacío'},400)
+    if(lines.length>50)return json({error:'Demasiadas líneas en el carrito'},400)
+    for(const line of lines){
+      if(!line||typeof line.variantId!=='string'||!line.variantId.trim())return json({error:'Cada línea requiere variantId'},400)
+      if(!Number.isInteger(line.quantity)||line.quantity<1||line.quantity>20)return json({error:'quantity inválida para '+line.variantId},400)
+    }
+    if(!shopifyConfigured(env))return json({error:'Shopify no está configurado'},503)
+
+    const ids=[...new Set(lines.map((l:any)=>String(l.variantId)))]
+    const placeholders=ids.map(()=>'?').join(',')
+    const rows=(await env.DB.prepare(`SELECT id,shopify_variant_id FROM variants WHERE id IN (${placeholders})`).bind(...ids).all()).results||[]
+    const found=new Map(rows.map((r:any)=>[r.id,r.shopify_variant_id]))
+    const unknown=ids.filter(id=>!found.has(id))
+    if(unknown.length)return json({error:'Variantes locales desconocidas: '+unknown.join(', ')},400)
+    const unmapped=ids.filter(id=>!found.get(id))
+    if(unmapped.length)return json({error:'Variantes sin mapping de Shopify: '+unmapped.join(', ')},409)
+
+    const shopifyLines=lines.map((l:any)=>({merchandiseId:toVariantGid(String(found.get(String(l.variantId)))),quantity:l.quantity}))
+    const buyerIp=request.headers.get('cf-connecting-ip')
+    try{
+      const {cartId,checkoutUrl}=await shopifyCartCreate(env,shopifyLines,buyerIp)
+      return json({cartId,checkoutUrl},200)
+    }catch(error){
+      if(error instanceof ShopifyUserError)return json({error:error.message},400)
+      return json({error:error instanceof Error?error.message:'Error creando el carrito de Shopify'},502)
+    }
+  }
+
   if(request.method==='GET'&&path.startsWith('/api/media/')){
     const id=decodeURIComponent(path.slice('/api/media/'.length))
     const row=await env.DB.prepare('SELECT * FROM product_media WHERE id=?').bind(id).first()
