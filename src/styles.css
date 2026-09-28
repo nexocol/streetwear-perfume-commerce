@@ -310,3 +310,10 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
   .premium-hero .hero-main-frame::after{display:none}
   .premium-menu-cats a>b,.premium-menu-cats a>em,.featured-rail .media,.premium-collection-links a::after{transition:none}
 }
+
+
+/* V4.7 route + scroll continuity */
+.scroll-progress{position:fixed;z-index:210;left:0;right:0;top:0;height:2px;background:var(--acid);transform-origin:left;transform:scaleX(var(--scroll-progress,0));pointer-events:none}
+.route-stage{animation:routeStageIn .55s var(--ease) both}
+@keyframes routeStageIn{from{opacity:.01;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.scroll-progress{display:none}.route-stage{animation:none}}
