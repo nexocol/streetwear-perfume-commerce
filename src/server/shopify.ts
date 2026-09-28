@@ -68,11 +68,11 @@ export async function shopifyGraphQL<T = any>(
 }
 
 export async function shopifyHealth(env: ShopifyEnv) {
-  const data = await shopifyGraphQL<{ shop: { name: string; currencyCode: string } }>(
+  const data = await shopifyGraphQL<{ shop: { name: string; paymentSettings: { currencyCode: string } } }>(
     env,
-    `query Health { shop { name primaryDomain { url } currencyCode } }`
+    `query Health { shop { name primaryDomain { url } paymentSettings { currencyCode } } }`
   )
-  return { shopName: data.shop.name, currency: data.shop.currencyCode }
+  return { shopName: data.shop.name, currency: data.shop.paymentSettings.currencyCode }
 }
 
 export function toVariantGid(shopifyVariantId: string) {

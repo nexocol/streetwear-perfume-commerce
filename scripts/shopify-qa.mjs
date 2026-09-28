@@ -55,7 +55,7 @@ function startMockShopify() {
       if (state.scenario === 'graphql-error') return send(200, { errors: [{ message: 'Simulated GraphQL failure' }] })
       if (state.scenario === 'http-500') return send(500, { error: 'boom' })
 
-      if (query.includes('shop {')) return send(200, { data: { shop: { name: 'EL PUNTO WEB (mock)', currencyCode: 'COP' } } })
+      if (query.includes('shop {')) return send(200, { data: { shop: { name: 'EL PUNTO WEB (mock)', paymentSettings: { currencyCode: 'COP' } } } })
 
       if (query.includes('cartCreate')) {
         if (state.scenario === 'cart-user-error') {
