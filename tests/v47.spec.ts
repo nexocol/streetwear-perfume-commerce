@@ -36,12 +36,13 @@ test.describe('V4.7 premium UX + motion',()=>{
     await expect(page).toHaveURL(/\/shop\?cat=/)
   })
 
-  test('route shell and scroll progress exist without changing storefront behavior',async({page})=>{
+  test('route shell, scroll progress and GSAP orchestration initialize without changing storefront behavior',async({page})=>{
     await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/')
     await expect(page.locator('.route-stage')).toBeVisible()
     await expect(page.locator('.scroll-progress')).toHaveCount(1)
+    await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.gsapMotion)).toBe('ready')
     const before=await page.locator('.scroll-progress').evaluate(el=>getComputedStyle(el).transform)
-    await page.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight*.5));await page.waitForTimeout(120)
+    await page.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight*.5));await page.waitForTimeout(160)
     const after=await page.locator('.scroll-progress').evaluate(el=>getComputedStyle(el).transform)
     expect(after).not.toBe(before)
   })
@@ -62,5 +63,6 @@ test.describe('V4.7 premium UX + motion',()=>{
     await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/')
     await expect(page.locator('.hero-ambient')).toHaveCSS('display','none')
     await expect(page.locator('.route-stage')).toHaveCSS('animation-name','none')
+    await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.gsapMotion)).toBe('reduced')
   })
 })
