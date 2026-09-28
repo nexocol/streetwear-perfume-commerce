@@ -58,12 +58,13 @@ export function Header(){
       <div className="premium-menu-body">
         <nav className="premium-menu-nav" aria-label="Navegación de tienda">
           <Link className="premium-menu-shop" to="/shop"><span>TIENDA</span><em>{catalog?.products.filter(p=>p.status==='active').length||0}</em></Link>
-          <div className="premium-menu-cats" role="group" aria-label="Categorías">
+          <div className="premium-menu-cats mobile-menu-cats" role="group" aria-label="Categorías">
             {categoryLinks.map((c,i)=><Link key={c.value} to={c.to} data-cat={c.value} onMouseEnter={()=>setMenuPreview(c.value)} onFocus={()=>setMenuPreview(c.value)}>
               <span>{String(i+1).padStart(2,'0')}</span><b>{c.label}</b><em>↗</em>
             </Link>)}
           </div>
           <div className="premium-menu-secondary">
+            <Link to="/#fragrance">FRAGRANCE ↗</Link>
             <Link to="/#editorial">EDITORIAL ↗</Link>
             <button onClick={ui.openSearch}>BUSCAR ↗</button>
           </div>
