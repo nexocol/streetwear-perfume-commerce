@@ -58,6 +58,7 @@ function startMockShopify() {
       if (query.includes('shop {')) return send(200, { data: { shop: { name: 'EL PUNTO WEB (mock)', paymentSettings: { currencyCode: 'COP' } } } })
 
       if (query.includes('cartCreate')) {
+        state.lastCartInput = parsed.variables?.input
         if (state.scenario === 'cart-user-error') {
           return send(200, { data: { cartCreate: { cart: null, userErrors: [{ field: ['lines'], message: 'Merchandise out of stock' }] } } })
         }
@@ -144,32 +145,56 @@ async function run() {
   console.log('\n== B. checkout payload validation ==')
   mock.state.scenario = 'cart-success'
   const post = body => fetch(w.base + '/api/shopify/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.9' }, body: JSON.stringify(body) })
+  const ctxPrepaidBogota = { purchaseMethod: 'prepaid', shippingRegion: 'bogota' }
   r = await j(await post({}))
   check(r.status === 400, 'checkout: missing lines -> 400', JSON.stringify(r.body))
-  r = await j(await post({ lines: [] }))
+  r = await j(await post({ lines: [], checkoutContext: ctxPrepaidBogota }))
   check(r.status === 400, 'checkout: empty lines -> 400')
-  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 0 }] }))
+  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 0 }], checkoutContext: ctxPrepaidBogota }))
   check(r.status === 400, 'checkout: quantity 0 -> 400')
-  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 999 }] }))
+  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 999 }], checkoutContext: ctxPrepaidBogota }))
   check(r.status === 400, 'checkout: quantity above cap -> 400')
-  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 1.5 }] }))
+  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 1.5 }], checkoutContext: ctxPrepaidBogota }))
   check(r.status === 400, 'checkout: non-integer quantity -> 400')
-  r = await j(await post({ lines: [{ variantId: 'does-not-exist', quantity: 1 }] }))
+  r = await j(await post({ lines: [{ variantId: 'does-not-exist', quantity: 1 }], checkoutContext: ctxPrepaidBogota }))
   check(r.status === 400 && /desconocid/i.test(r.body.error), 'checkout: unknown local variant id -> 400', JSON.stringify(r.body))
-  r = await j(await post({ lines: [{ variantId: 'perfume-01-u', quantity: 1 }] }))
+  r = await j(await post({ lines: [{ variantId: 'perfume-01-u', quantity: 1 }], checkoutContext: ctxPrepaidBogota }))
   check(r.status === 409 && /mapping/i.test(r.body.error), 'checkout: known variant without shopify_variant_id -> 409', JSON.stringify(r.body))
 
-  console.log('\n== C. checkout: server ignores client-supplied Shopify/price data ==')
-  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 2, shopifyVariantId: 'gid://shopify/ProductVariant/9999999', price: 1 }] }))
+  console.log('\n== B2. checkoutContext validation ==')
+  const validLine = { variantId: 'tee-01-S', quantity: 1 }
+  r = await j(await post({ lines: [validLine] }))
+  check(r.status === 400, 'checkout: missing checkoutContext -> 400', JSON.stringify(r.body))
+  r = await j(await post({ lines: [validLine], checkoutContext: { purchaseMethod: 'bitcoin', shippingRegion: 'bogota' } }))
+  check(r.status === 400, 'checkout: invalid purchaseMethod -> 400')
+  r = await j(await post({ lines: [validLine], checkoutContext: { purchaseMethod: 'prepaid' } }))
+  check(r.status === 400, 'checkout: prepaid without shippingRegion -> 400')
+  r = await j(await post({ lines: [validLine], checkoutContext: { purchaseMethod: 'cod', shippingRegion: 'moon' } }))
+  check(r.status === 400, 'checkout: invalid shippingRegion -> 400')
+  r = await j(await post({ lines: [validLine], checkoutContext: { purchaseMethod: 'pickup', shippingRegion: 'bogota' } }))
+  check(r.status === 400, 'checkout: pickup with a shippingRegion -> 400 (browser cannot force a region on pickup)')
+  r = await j(await post({ lines: [validLine], checkoutContext: { purchaseMethod: 'pickup' } }))
+  check(r.status === 200, 'checkout: pickup without shippingRegion -> ok', JSON.stringify(r.body))
+
+  console.log('\n== C. checkout: server ignores client-supplied Shopify/price data; attributes are server-derived ==')
+  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 2, shopifyVariantId: 'gid://shopify/ProductVariant/9999999', price: 1 }], checkoutContext: { purchaseMethod: 'cod', shippingRegion: 'bogota' } }))
   check(r.status === 200 && r.body.checkoutUrl && r.body.cartId, 'checkout: mapped variant succeeds', JSON.stringify(r.body))
   const cartBody = mock.state.receivedBodies.at(-1)
   check(cartBody.variables.input.lines[0].merchandiseId === 'gid://shopify/ProductVariant/2001', 'checkout: cart uses the D1-mapped Shopify variant id, not the client-supplied one')
   check(cartBody.variables.input.lines[0].quantity === 2, 'checkout: quantity passed through correctly')
   const buyerIpHeader = mock.state.receivedHeaders.at(-1)['shopify-storefront-buyer-ip']
   check(buyerIpHeader === '203.0.113.9', 'checkout: buyer IP forwarded from CF-Connecting-IP header')
+  const attrs = Object.fromEntries((mock.state.lastCartInput.attributes || []).map(a => [a.key, a.value]))
+  check(attrs.EL_PUNTO_PURCHASE_METHOD === 'Contraentrega', 'checkout: EL_PUNTO_PURCHASE_METHOD attribute set from server-validated context', JSON.stringify(attrs))
+  check(attrs.EL_PUNTO_SHIPPING_REGION === 'Bogotá D.C.', 'checkout: EL_PUNTO_SHIPPING_REGION attribute set', JSON.stringify(attrs))
+  check(attrs.EL_PUNTO_EXPECTED_SHIPPING_COP === '15000', 'checkout: EL_PUNTO_EXPECTED_SHIPPING_COP derived server-side from admin commercial terms (COD Bogotá=15000), not from the client', JSON.stringify(attrs))
+
+  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 1 }], checkoutContext: { purchaseMethod: 'pickup' } }))
+  const pickupAttrs = Object.fromEntries((mock.state.lastCartInput.attributes || []).map(a => [a.key, a.value]))
+  check(pickupAttrs.EL_PUNTO_EXPECTED_SHIPPING_COP === '0' && pickupAttrs.EL_PUNTO_FULFILLMENT === 'Retiro' && !('EL_PUNTO_SHIPPING_REGION' in pickupAttrs), 'checkout: pickup attributes (0 shipping, Retiro, no region)', JSON.stringify(pickupAttrs))
 
   mock.state.scenario = 'cart-user-error'
-  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 1 }] }))
+  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 1 }], checkoutContext: ctxPrepaidBogota }))
   check(r.status === 400 && /out of stock/i.test(r.body.error), 'checkout: Shopify userErrors surfaced as 400', JSON.stringify(r.body))
 
   await w.stop()
@@ -178,7 +203,7 @@ async function run() {
   w = await startWorker(dbA, { ADMIN_DEV_BYPASS: 'true' })
   r = await j(await fetch(w.base + '/api/shopify/health'))
   check(r.status === 503 && r.body.configured === false, 'health: unconfigured -> configured=false / 503')
-  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 1 }] }))
+  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 1 }], checkoutContext: ctxPrepaidBogota }))
   check(r.status === 503, 'checkout: unconfigured -> 503')
   await w.stop()
 
@@ -215,6 +240,6 @@ async function run() {
 }
 
 try { await run() } catch (e) { console.error('QA crashed:', e); failures++ }
-finally { rmSync(work, { recursive: true, force: true }) }
+finally { try { rmSync(work, { recursive: true, force: true }) } catch {} }
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll Shopify integration checks passed')
 process.exit(failures ? 1 : 0)

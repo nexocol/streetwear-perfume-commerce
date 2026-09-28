@@ -82,7 +82,8 @@ export function toVariantGid(shopifyVariantId: string) {
 export async function shopifyCartCreate(
   env: ShopifyEnv,
   lines: { merchandiseId: string; quantity: number }[],
-  buyerIp?: string | null
+  buyerIp?: string | null,
+  attributes?: { key: string; value: string }[]
 ) {
   const data = await shopifyGraphQL<{
     cartCreate: {
@@ -97,7 +98,7 @@ export async function shopifyCartCreate(
         userErrors { field message }
       }
     }`,
-    { input: { lines } },
+    { input: { lines, ...(attributes?.length ? { attributes } : {}) } },
     { buyerIp }
   )
   const { cart, userErrors } = data.cartCreate

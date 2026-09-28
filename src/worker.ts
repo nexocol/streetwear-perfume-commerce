@@ -1,5 +1,7 @@
 import { SCHEMA_SQL, SEED_SQL, BASE_SCHEMA_VERSION, SCHEMA_VERSION, MIGRATION_V2_COLUMN, MIGRATION_V2_SQL } from './server/schema'
 import { shopifyConfigured, shopifyHealth, shopifyCartCreate, shopifyFetchOverlay, toVariantGid, ShopifyUserError, type ShopifyEnv } from './server/shopify'
+import { parseCheckoutContext, cartAttributesFor } from './lib/shippingRegions'
+import { parseCommercialTerms } from './lib/clientContent'
 
 type AccessIdentity={email?:string|null}
 type AccessContext={access?:{getIdentity:()=>Promise<AccessIdentity|null>}}
@@ -212,6 +214,8 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
       if(!line||typeof line.variantId!=='string'||!line.variantId.trim())return json({error:'Cada línea requiere variantId'},400)
       if(!Number.isInteger(line.quantity)||line.quantity<1||line.quantity>20)return json({error:'quantity inválida para '+line.variantId},400)
     }
+    const checkoutContext=parseCheckoutContext(body?.checkoutContext)
+    if(!checkoutContext)return json({error:'checkoutContext inválido (purchaseMethod/shippingRegion)'},400)
     if(!shopifyConfigured(env))return json({error:'Shopify no está configurado'},503)
 
     const ids=[...new Set(lines.map((l:any)=>String(l.variantId)))]
@@ -225,8 +229,11 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
 
     const shopifyLines=lines.map((l:any)=>({merchandiseId:toVariantGid(String(found.get(String(l.variantId)))),quantity:l.quantity}))
     const buyerIp=request.headers.get('cf-connecting-ip')
+    const siteRow=await env.DB.prepare('SELECT shipping_copy FROM site_settings WHERE id="default"').first()
+    const terms=parseCommercialTerms(siteRow?.shipping_copy as string|null|undefined)
+    const attributes=cartAttributesFor(terms,checkoutContext)
     try{
-      const {cartId,checkoutUrl}=await shopifyCartCreate(env,shopifyLines,buyerIp)
+      const {cartId,checkoutUrl}=await shopifyCartCreate(env,shopifyLines,buyerIp,attributes)
       return json({cartId,checkoutUrl},200)
     }catch(error){
       if(error instanceof ShopifyUserError)return json({error:error.message},400)

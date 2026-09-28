@@ -1,18 +1,21 @@
 import { useMemo } from 'react'
 import type { Product } from '../types'
-import { availableColors, colorLabel, isBuyable, useVariantSelection } from '../lib/variants'
+import { availableColors, colorLabel, useVariantSelection } from '../lib/variants'
 import { money } from '../lib/format'
+import { canBuy, selectedVariantPrice } from '../lib/pricing'
 import { useCommerce } from '../commerce/CommerceProvider'
+import { useCatalog } from '../context/CatalogContext'
 import { useUI } from '../context/UIContext'
 import { ShippingPayments } from './ShippingPayments'
 import { categorySingularLabel, displayCategory, displayProductDescription, displayProductFeatures, displayProductName, displayProductSubtitle, productStyle } from '../lib/clientContent'
 
 export function ProductInfo({product}:{product:Product}){
-  const commerce=useCommerce();const ui=useUI();const single=product.variants.length===1
+  const commerce=useCommerce();const ui=useUI();const {catalog}=useCatalog();const single=product.variants.length===1
+  const shopifyEnabled=Boolean(catalog?.site?.shopifyEnabled)
   const selection=useVariantSelection(product.variants);const {variant}=selection
   const colorsAvailable=useMemo(()=>availableColors(product.variants),[product.variants])
-  const unavailable=!variant||!variant.available||variant.stock===0
-  const displayPrice=variant?.price??product.price
+  const unavailable=!variant||!canBuy(variant,shopifyEnabled)
+  const displayPrice=selectedVariantPrice(variant,product,shopifyEnabled)
   const name=displayProductName(product);const subtitle=displayProductSubtitle(product);const description=displayProductDescription(product);const style=productStyle(product);const features=displayProductFeatures(product)
   const perfume=product.category==='Perfumes'
   const typeLabel=categorySingularLabel(product.category)
@@ -23,10 +26,10 @@ export function ProductInfo({product}:{product:Product}){
     <div className="product-facts">{perfume?<div><span>FAMILIA OLFATIVA</span><b>{product.fragranceFamily||'Por confirmar'}</b></div>:style?<div><span>{product.category==='Jeans'?'ESTILO / SUBTIPO':'ESTILO / FIT'}</span><b>{style}</b></div>:typeLabel&&<div><span>PRODUCTO</span><b>{typeLabel}</b></div>}<div><span>DISPONIBILIDAD</span><b>{variant?.stock===0?'AGOTADO':variant?'DISPONIBLE':'SELECCIONA TALLA'}</b></div></div>
     {selection.hasColors&&<>
       <div className="size-heading"><span>COLOR</span><b className="color-current" data-testid="selected-color">{colorLabel(selection.color||'')}</b></div>
-      <div className="color-options" role="group" aria-label="Color">{selection.colors.map(c=>{const buyable=product.variants.some(v=>(v.color||'').trim()===c&&isBuyable(v));return <button key={c||'_'} className={selection.color===c?'selected':''} aria-pressed={selection.color===c} disabled={!buyable} onClick={()=>selection.selectColor(c)}>{colorLabel(c)}</button>})}</div>
+      <div className="color-options" role="group" aria-label="Color">{selection.colors.map(c=>{const buyable=product.variants.some(v=>(v.color||'').trim()===c&&canBuy(v,shopifyEnabled));return <button key={c||'_'} className={selection.color===c?'selected':''} aria-pressed={selection.color===c} disabled={!buyable} onClick={()=>selection.selectColor(c)}>{colorLabel(c)}</button>})}</div>
     </>}
     <div className="size-heading"><span>{single?'OPCIÓN':'SELECCIONA TU TALLA'}</span>{product.category==='Jeans'&&<button className="text-link" onClick={()=>ui.openInfo('size')}>GUÍA DE TALLAS ↗</button>}</div>
-    <div className="sizes" role="group" aria-label="Talla">{selection.sizeOptions.map(v=><button key={v.id} className={selection.size===v.size?'selected':''} aria-pressed={selection.size===v.size} disabled={!isBuyable(v)} onClick={()=>selection.selectSize(v.size)}>{v.size}</button>)}</div>
+    <div className="sizes" role="group" aria-label="Talla">{selection.sizeOptions.map(v=><button key={v.id} className={selection.size===v.size?'selected':''} aria-pressed={selection.size===v.size} disabled={!canBuy(v,shopifyEnabled)} onClick={()=>selection.selectSize(v.size)}>{v.size}</button>)}</div>
     <button className="btn dark wide add-button" onClick={add} disabled={unavailable} data-cursor="AGREGAR">{variant?unavailable?'NO DISPONIBLE':'AGREGAR AL CARRITO':'SELECCIONA TU TALLA'}</button>
 
     {perfume?<details open><summary>COMPOSICIÓN / NOTAS <span>+</span></summary><div className="perfume-profile">

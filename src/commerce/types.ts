@@ -1,4 +1,5 @@
 import type { Product, Variant, HydratedCartLine } from '../types'
+import type { CheckoutContext } from '../lib/shippingRegions'
 export type CheckoutResult={ok:true;checkoutUrl:string}|{ok:false;error:string}
 export interface CommerceAdapter{
   lines:HydratedCartLine[]
@@ -7,5 +8,5 @@ export interface CommerceAdapter{
   removeLine:(key:string)=>Promise<void>
   clear:()=>Promise<void>
   checkoutEnabled:boolean
-  startCheckout:()=>Promise<CheckoutResult>
+  startCheckout:(context:CheckoutContext)=>Promise<CheckoutResult>
 }
