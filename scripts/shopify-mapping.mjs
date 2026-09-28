@@ -8,7 +8,9 @@
 //
 import { spawnSync } from 'node:child_process'
 import { writeFileSync, mkdirSync } from 'node:fs'
+import path from 'node:path'
 
+const wranglerBin = path.join(process.cwd(), 'node_modules/wrangler/bin/wrangler.js')
 const DB = 'streetwear-perfume-commerce-db'
 const DOMAIN = '78701p-u5.myshopify.com'
 const API_VERSION = '2026-07'
@@ -25,7 +27,9 @@ if (!token) {
 }
 
 function d1(sql) {
-  const r = spawnSync('npx', ['wrangler', 'd1', 'execute', DB, '--remote', '--command', sql, '--json'], { encoding: 'utf8', maxBuffer: 1e8, shell: true })
+  // Invoke wrangler's own JS entrypoint directly via process.execPath (no npx, no shell) —
+  // avoids the Windows shell:true argument-splitting bug that broke --command <sql with spaces>.
+  const r = spawnSync(process.execPath, [wranglerBin, 'd1', 'execute', DB, '--remote', '--command', sql, '--json'], { encoding: 'utf8', maxBuffer: 1e8, shell: false })
   if (r.status !== 0) throw new Error('wrangler d1 execute failed: ' + (r.stdout || '') + (r.stderr || ''))
   const out = r.stdout
   return JSON.parse(out.slice(out.indexOf('[')))[0].results
