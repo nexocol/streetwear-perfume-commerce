@@ -96,21 +96,21 @@ test.describe('V4.5 category quick nav on /shop',()=>{
     await page.locator('.nav-menu').click();await expect(page.locator('.mobile-menu.open')).toBeVisible()
     const subs=page.locator('.mobile-menu-cats a');const expected=links()
     await expect(subs).toHaveText(expected.map(e=>e.label))
-    const sizes=await page.evaluate(()=>({big:parseFloat(getComputedStyle(document.querySelector('.mobile-menu nav > a')!).fontSize),sub:parseFloat(getComputedStyle(document.querySelector('.mobile-menu-cats a')!).fontSize),h:document.querySelector('.mobile-menu-cats a')!.getBoundingClientRect().height}))
-    expect(sizes.sub).toBeLessThan(24);expect(sizes.big).toBeGreaterThan(sizes.sub*2);expect(sizes.h).toBeGreaterThanOrEqual(40)
+    const sizes=await page.evaluate(()=>({shop:parseFloat(getComputedStyle(document.querySelector('.premium-menu-shop span')!).fontSize),sub:parseFloat(getComputedStyle(document.querySelector('.mobile-menu-cats a b')!).fontSize),h:document.querySelector('.mobile-menu-cats a')!.getBoundingClientRect().height}))
+    expect(sizes.sub).toBeGreaterThanOrEqual(20);expect(sizes.shop).toBeGreaterThanOrEqual(sizes.sub);expect(sizes.h).toBeGreaterThanOrEqual(44)
     await page.locator('.mobile-menu-cats a[data-cat="Streetwear"]').click()
     await expect(page).toHaveURL(/\/shop\?cat=Streetwear$/);await expect(page.locator('.mobile-menu.open')).toHaveCount(0)
     const titles=await page.locator('.catalog-grid .card h3').allInnerTexts();for(const t of titles)expect(t).toMatch(/Camiseta/i)
   })
 })
 
-test.describe('V4.5 mobile menu: no clipped words',()=>{
-  for(const width of [1024,768,430,390])test(`@${width}: FRAGRANCE / EDITORIAL / TIENDA / BUSCAR fit inside the gutters, no overflow`,async({page})=>{
+test.describe('V4.5/V4.7 menu: no clipped navigation',()=>{
+  for(const width of [1024,768,430,390])test(`@${width}: shop, categories and secondary actions fit with no document overflow`,async({page})=>{
     await page.setViewportSize({width,height:900});await mockApi(page);await page.goto('/shop')
     await page.locator('.nav-menu').click();await expect(page.locator('.mobile-menu.open')).toBeVisible();await page.waitForTimeout(600)
-    const m=await page.evaluate(()=>{const vw=document.documentElement.clientWidth;return {docOv:document.documentElement.scrollWidth-vw,items:[...document.querySelectorAll<HTMLElement>('.mobile-menu nav > a, .mobile-menu nav > button')].map(a=>{const r=document.createRange();r.selectNodeContents(a);const b=r.getBoundingClientRect();return {t:a.textContent,right:b.right,clipped:a.scrollWidth>a.clientWidth+1,vw}})}})
-    expect(m.items.map(i=>i.t)).toEqual(['TIENDA','FRAGRANCE','EDITORIAL','BUSCAR'])
-    for(const i of m.items){expect(i.clipped,i.t+' clipped').toBe(false);expect(i.right,i.t+' right edge').toBeLessThanOrEqual(i.vw-18+1)}
+    const m=await page.evaluate(()=>{const vw=document.documentElement.clientWidth;const nodes=[...document.querySelectorAll<HTMLElement>('.premium-menu-shop span,.premium-menu-cats b,.premium-menu-secondary a,.premium-menu-secondary button')];return {docOv:document.documentElement.scrollWidth-vw,items:nodes.map(a=>{const r=document.createRange();r.selectNodeContents(a);const b=r.getBoundingClientRect();return {t:a.textContent?.trim(),left:b.left,right:b.right,vw}})}})
+    expect(m.items.some(i=>i.t==='TIENDA')).toBe(true);expect(m.items.some(i=>i.t?.includes('FRAGRANCE'))).toBe(true);expect(m.items.some(i=>i.t?.includes('EDITORIAL'))).toBe(true);expect(m.items.some(i=>i.t?.includes('BUSCAR'))).toBe(true)
+    for(const i of m.items){expect(i.left,i.t+' left edge').toBeGreaterThanOrEqual(17);expect(i.right,i.t+' right edge').toBeLessThanOrEqual(i.vw-17)}
     expect(m.docOv).toBeLessThanOrEqual(0)
   })
 })
