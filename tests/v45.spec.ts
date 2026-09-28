@@ -78,10 +78,12 @@ test.describe('V4.5 category quick nav on /shop',()=>{
     await expect(page).toHaveURL(/cat=Streetwear/);await expect(page).toHaveURL(/size=M/)
     await expect(page.locator('.shop-cats a[aria-current="true"]')).toHaveAttribute('data-cat','Streetwear')
   })
-  test('home -> TIENDA -> CAMISETAS shows only camisetas',async({page})=>{
+  test('home -> MENU -> CAMISETAS shows only camisetas',async({page})=>{
     await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/')
-    await page.locator('nav[aria-label="Principal"] a',{hasText:'TIENDA'}).click()
-    await page.locator('.shop-cats a[data-cat="Streetwear"]').click()
+    await page.locator('.premium-menu-trigger').click()
+    await expect(page.locator('.premium-menu.open')).toBeVisible()
+    await page.locator('.premium-menu-cats a[data-cat="Streetwear"]').click()
+    await expect(page).toHaveURL(/\/shop\?cat=Streetwear$/)
     const titles=await page.locator('.catalog-grid .card h3').allInnerTexts()
     expect(titles.length).toBeGreaterThan(0);for(const t of titles)expect(t).toMatch(/Camiseta/i)
   })
