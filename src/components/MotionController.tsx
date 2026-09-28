@@ -23,9 +23,16 @@ export function MotionController(){
       raf=0
       const now=performance.now(),y=scrollY,max=Math.max(1,root.scrollHeight-innerHeight)
       const dt=Math.max(16,now-lastT),velocity=Math.max(-2,Math.min(2,(y-lastY)/dt))
-      root.style.setProperty('--scroll-progress',String(y/max))
+      const progress=y/max
+      root.style.setProperty('--scroll-progress',String(progress))
       root.style.setProperty('--scroll-y',y+'px')
       root.style.setProperty('--scroll-velocity',String(velocity))
+      root.style.setProperty('--ticker-duration',Math.max(20,Math.min(28,24-velocity*2))+'s')
+      root.style.setProperty('--motion-x',velocity*18+'px')
+      root.style.setProperty('--menu-motion-x',velocity*-10+'px')
+      root.style.setProperty('--hero-orb-y',progress*-80+'px')
+      root.style.setProperty('--hero-ring-y',progress*-40+'px')
+      root.style.setProperty('--hero-line-y',progress*-40+'px')
       root.dataset.scrollDirection=y>=lastY?'down':'up'
       lastY=y;lastT=now
     }
