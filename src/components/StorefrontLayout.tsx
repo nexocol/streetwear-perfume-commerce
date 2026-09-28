@@ -17,5 +17,5 @@ export function StorefrontLayout(){
   useEffect(()=>{ui.closeAll();if(location.hash)requestAnimationFrame(()=>document.querySelector(location.hash)?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'}));else scrollTo({top:0,behavior:'auto'})},[location.pathname,location.hash])
   if(catalog.loading)return <LoadingState/>
   if(catalog.error||!catalog.catalog)return <ErrorState message={catalog.error||'Sin datos.'} onRetry={catalog.refresh}/>
-  return <div className="storefront-root"><SeoGuard/><Header/><Outlet/><Footer/><CartDrawer/><SearchOverlay/><Dialogs/><Cursor/><MotionController/>{ui.toast&&<div id="toast" className="visible" role="status">{ui.toast}</div>}</div>
+  return <div className="storefront-root"><SeoGuard/><div className="scroll-progress" aria-hidden="true"/><Header/><div className="route-stage" key={location.pathname}><Outlet/></div><Footer/><CartDrawer/><SearchOverlay/><Dialogs/><Cursor/><MotionController/>{ui.toast&&<div id="toast" className="visible" role="status">{ui.toast}</div>}</div>
 }
