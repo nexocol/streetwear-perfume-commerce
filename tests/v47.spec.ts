@@ -74,6 +74,14 @@ test.describe('V4.7 premium UX + motion',()=>{
     for(const b of report.boxes){expect(b.left,b.text).toBeGreaterThanOrEqual(16);expect(b.right,b.text).toBeLessThanOrEqual(width-16)}
   })
 
+  test('featured products never depend on GSAP opacity to be discoverable',async({page})=>{
+    await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/')
+    const rail=page.locator('.featured-rail');await rail.scrollIntoViewIfNeeded();await page.waitForTimeout(120)
+    const opacities=await rail.locator('.card').evaluateAll(cards=>cards.map(c=>Number(getComputedStyle(c as HTMLElement).opacity)))
+    expect(opacities.length).toBeGreaterThan(0)
+    for(const opacity of opacities)expect(opacity).toBeGreaterThan(.9)
+  })
+
   for(const width of [1920,1440,1024])test(`fragrance parallax stays inside viewport @${width}`,async({page})=>{
     await page.setViewportSize({width,height:1000});await mockApi(page);await page.goto('/')
     const section=page.locator('.fragrance');await section.scrollIntoViewIfNeeded();await page.waitForTimeout(900)
