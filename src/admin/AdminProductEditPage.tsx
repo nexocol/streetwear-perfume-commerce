@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useAdminBase } from './adminMode'
 import { createBlankProduct, deleteProductMedia, fetchCatalog, reorderProductMedia, saveProduct, uploadProductMedia } from '../lib/catalogRepository'
 import type { CatalogSnapshot, MediaType, Product, ProductMedia, Variant } from '../types'
 import { ImageWithFallback } from '../components/ImageWithFallback'
@@ -9,7 +10,7 @@ const mediaTypes:MediaType[]=['hero','front','back','detail','model','editorial'
 type SaveState='idle'|'dirty'|'saving'|'saved'|'error'
 
 export function AdminProductEditPage(){
-  const {id}=useParams();const navigate=useNavigate()
+  const {id}=useParams();const navigate=useNavigate();const base=useAdminBase()
   const [catalog,setCatalog]=useState<CatalogSnapshot|null>(null);const [product,setProduct]=useState<Product|null>(null);const [collections,setCollections]=useState<string[]>([])
   const [baseline,setBaseline]=useState('');const [saveState,setSaveState]=useState<SaveState>('idle');const [error,setError]=useState<string|null>(null)
   const [mediaType,setMediaType]=useState<MediaType>('hero');const [mediaAlt,setMediaAlt]=useState('');const [mediaBusy,setMediaBusy]=useState(false)
@@ -38,7 +39,7 @@ export function AdminProductEditPage(){
     try{
       const next={...product,category:categoryName};const saved=await saveProduct(next,collections);const cols=saved.collections.map(c=>c.id)
       setProduct(saved);setCollections(cols);setBaseline(JSON.stringify({product:saved,collections:cols}));setSaveState('saved')
-      if(isNew)navigate('/admin/products/'+saved.id,{replace:true})
+      if(isNew)navigate(base+'/products/'+saved.id,{replace:true})
       window.setTimeout(()=>setSaveState('idle'),1800)
     }catch(e){setError(e instanceof Error?e.message:'Error guardando producto');setSaveState('error')}
   }

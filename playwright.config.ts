@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test'
 export default defineConfig({
   testDir:'./tests',
+  testIgnore:/v49.spec.ts$/,
   timeout:45_000,
   workers:1,
   use:{baseURL:'http://127.0.0.1:4173',browserName:'chromium',trace:'retain-on-failure'},

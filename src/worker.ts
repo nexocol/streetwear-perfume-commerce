@@ -2,6 +2,8 @@ import { SCHEMA_SQL, SEED_SQL, BASE_SCHEMA_VERSION, SCHEMA_VERSION, MIGRATION_V2
 import { shopifyConfigured, shopifyHealth, shopifyCartCreate, shopifyFetchOverlay, toVariantGid, ShopifyUserError, type ShopifyEnv } from './server/shopify'
 import { parseCheckoutContext, cartAttributesFor } from './lib/shippingRegions'
 import { parseCommercialTerms } from './lib/clientContent'
+import { getSessionUser, handleLogin, handleLogout, handleChangePassword, rejectCrossOrigin, DEMO_MESSAGE } from './server/adminAuth'
+import { seedCatalog } from './data/seed'
 
 type AccessIdentity={email?:string|null}
 type AccessContext={access?:{getIdentity:()=>Promise<AccessIdentity|null>}}
@@ -262,9 +264,16 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
     return new Response(object.body,{headers})
   }
 
+  if(path.startsWith('/api/panel/'))return handlePanelApi(request,env,path)
+  if(path.startsWith('/api/demo/'))return handleDemoApi(request,path,env)
+
   if(!path.startsWith('/api/admin/'))return json({error:'Not found'},404)
   const admin=await requireAdmin(request,env,ctx)
+  return adminRoutes(request,env,path,admin)
+}
 
+// The CMS endpoints. Reached from /api/admin/* (Cloudflare Access, Nexo) and /api/panel/* (client session, rewritten to /api/admin/*).
+async function adminRoutes(request:Request,env:Env,path:string,admin:{email:string|null}){
   if(request.method==='GET'&&path==='/api/admin/session')return json({email:admin.email})
   if(request.method==='GET'&&path==='/api/admin/catalog')return json(await getCatalog(env,true))
 
@@ -338,11 +347,60 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
   return json({error:'Not found'},404)
 }
 
+// Client panel API: authenticated only by an application session (never by the Access header, which anyone can forge on this path).
+async function handlePanelApi(request:Request,env:Env,path:string){
+  const blocked=rejectCrossOrigin(request);if(blocked)return blocked
+  const rest=path.slice('/api/panel/'.length)
+  if(request.method==='POST'&&rest==='login')return handleLogin(request,env,'panel')
+  if(request.method==='POST'&&rest==='logout')return handleLogout(request,env,'panel')
+  const user=await getSessionUser(env,request,'panel')
+  if(!user)return json({error:'Sesión no válida.'},401)
+  if(request.method==='GET'&&rest==='session')return json({email:user.username,username:user.username,mustChangePassword:user.mustChangePassword})
+  if(request.method==='POST'&&rest==='change-password')return handleChangePassword(request,env,user)
+  if(user.mustChangePassword)return json({error:'Debes cambiar tu contraseña antes de continuar.',code:'PASSWORD_CHANGE_REQUIRED'},403)
+  return adminRoutes(request,env,'/api/admin/'+rest,{email:user.username})
+}
+
+// Demo API: serves a static fixture and has no code path that writes D1/R2 or reaches Shopify; every non-GET is refused before its body is read.
+function demoCatalog(){
+  const catalog=structuredClone(seedCatalog)
+  catalog.site={...catalog.site,brandName:'EL PUNTO — DEMO',instagram:null,whatsapp:null,email:null,storeStatus:'preview',shopifyEnabled:false,previewNoindex:true}
+  return catalog
+}
+async function handleDemoApi(request:Request,path:string,env:Env){
+  const blocked=rejectCrossOrigin(request);if(blocked)return blocked
+  const rest=path.slice('/api/demo/'.length)
+  if(request.method==='POST'&&rest==='login')return handleLogin(request,env,'demo')
+  if(request.method==='POST'&&rest==='logout')return handleLogout(request,env,'demo')
+  const user=await getSessionUser(env,request,'demo')
+  if(!user)return json({error:'Sesión no válida.'},401)
+  if(request.method!=='GET'&&request.method!=='HEAD')return json({error:DEMO_MESSAGE,demo:true},403)
+  if(rest==='session')return json({email:user.username,username:user.username,demo:true,mustChangePassword:false})
+  if(rest==='catalog')return json(demoCatalog())
+  return json({error:'Not found'},404)
+}
+
+const PRIVATE_SHELL=/^\/(panel|demo)(\/|$)/
+// The SPA shell for /panel and /demo/*: never indexable, in the header and in the HTML itself.
+async function servePrivateShell(request:Request,env:Env){
+  const response=await env.ASSETS.fetch(request)
+  const headers=new Headers(response.headers)
+  headers.set('X-Robots-Tag','noindex, nofollow, noarchive')
+  headers.set('Cache-Control','no-store')
+  if(!(headers.get('content-type')||'').includes('text/html'))return new Response(response.body,{status:response.status,headers})
+  const html=(await response.text())
+    .replace(/(<meta name="robots" content=")[^"]*("\s*id="robots-meta">)/,'$1noindex,nofollow,noarchive$2')
+    .replace(/(<meta name="googlebot" content=")[^"]*("\s*id="googlebot-meta">)/,'$1noindex,nofollow,noarchive$2')
+  headers.delete('content-length');headers.delete('etag')
+  return new Response(html,{status:response.status,headers})
+}
+
 export default {
   async fetch(request:Request,env:Env,ctx:AccessContext){
     try{
       const url=new URL(request.url)
       if(url.pathname.startsWith('/api/'))return await handleApi(request,env,ctx)
+      if(PRIVATE_SHELL.test(url.pathname))return await servePrivateShell(request,env)
       return env.ASSETS.fetch(request)
     }catch(error){
       if(error instanceof Response)return error

@@ -362,3 +362,28 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
   .hero-actions,.hero-actions .btn,.editorial-actions .btn{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.hero-main-frame{transition:none}}
+/* V4.9 admin access: branded client login, forced first-login password change and the demo strip. /admin keeps its existing look. */
+.panel-screen{min-height:100svh;display:grid;place-items:center;padding:clamp(24px,6vw,64px) var(--pad);background:var(--paper)}
+.panel-card{width:min(440px,100%);container-type:inline-size}
+.panel-brand{display:flex;align-items:center;gap:14px;min-height:56px}
+.panel-brand img{display:block;height:56px;width:auto;max-width:150px;object-fit:contain}
+.panel-brand strong{font:800 22px/1 var(--display);letter-spacing:-.04em;border:1px solid var(--ink);padding:9px 12px}
+.demo-pill{font:800 9px/1 var(--ui);letter-spacing:.16em;padding:6px 9px;background:var(--acid);color:#000}
+/* Syne 800 runs ~10.9em for "administrativo": size from the card so the longest word always fits. */
+.panel-card h1{margin:34px 0 0;font:800 min(40px,calc(100cqw / 10.9))/.94 var(--display);letter-spacing:-.05em}
+.panel-lead{margin:16px 0 0;font-size:15px;line-height:1.55;color:#3b3833}
+.panel-card form{display:grid;gap:18px;margin-top:32px;padding-top:26px;border-top:1px solid var(--line)}
+.panel-card label{display:grid;gap:8px;font:800 10px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.panel-card input{width:100%;height:52px;padding:0 14px;border:1px solid var(--line);border-radius:0;background:transparent;font:500 16px var(--ui);letter-spacing:0;text-transform:none;color:var(--ink)}
+.panel-card input:focus{outline:2px solid var(--ink);outline-offset:0;border-color:var(--ink)}
+.panel-card .btn.wide{margin-top:6px}
+.panel-hint{margin-top:-6px;font-size:12px;color:var(--muted)}
+.panel-error{margin:0;padding:12px 14px;border:1px solid #8c2020;background:#fff1f1;color:#651515;font-size:13px;line-height:1.4}
+.panel-card>small{display:block;margin-top:26px;font:800 9px/1 var(--ui);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+.demo-strip{grid-column:1/-1;position:sticky;top:0;z-index:70;display:flex;align-items:center;justify-content:center;gap:14px;min-height:30px;padding:6px var(--pad);background:var(--acid);color:#000;font:800 10px/1.2 var(--ui);letter-spacing:.12em;text-transform:uppercase}
+.demo-strip span{font-weight:600;letter-spacing:.06em;opacity:.8}
+.admin-shell.is-demo .admin-nav{top:30px;height:calc(100vh - 30px)}
+.admin-shell.is-demo .admin-page-head{top:30px}
+@media(max-width:768px){.admin-shell.is-demo .admin-nav{height:auto}}
+@media(max-width:560px){.demo-strip span{display:none}}
