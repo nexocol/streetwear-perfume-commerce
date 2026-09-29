@@ -153,9 +153,11 @@ export function normalizeLegacyProduct(product:Product):Product{
   return {...product,name:displayProductName(product),subtitle:displayProductSubtitle(product),description:displayProductDescription(product)}
 }
 
+export const DEFAULT_HOME_HEADLINE='TODO EL DROP.'
 export function clientHomeHeadline(value:string){
   const normalized=(value||'').replace(/\r/g,'').trim()
-  if(!normalized||/DROP\s*\/\s*001[\s\S]*DENIM\s*\+\s*STREETWEAR/i.test(normalized))return 'TODO EL DROP\nPOR CATEGORÍAS'
+  // Empty, the original seed and the previous default all resolve to the current default; client-written headlines pass through.
+  if(!normalized||/DROP\s*\/\s*001[\s\S]*DENIM\s*\+\s*STREETWEAR/i.test(normalized)||/^TODO EL DROP\s*(\\n|\n)\s*POR CATEGORÍAS$/i.test(normalized))return DEFAULT_HOME_HEADLINE
   return value
 }
 

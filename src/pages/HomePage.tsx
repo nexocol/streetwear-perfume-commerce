@@ -13,7 +13,6 @@ export function HomePage(){
 
   const cfg=catalog.homepage
   const hero=productById(cfg.heroProductId)||catalog.products.find(p=>p.category==='Jeans')||catalog.products[0]
-  const secondary=productById(cfg.heroSecondaryProductId)||catalog.products.find(p=>p.id!==hero?.id&&p.category==='Jeans')
   const featured=(cfg.featuredProductIds.map(productById).filter(Boolean).slice(0,4) as typeof catalog.products)
   const selected=featured.length?featured:catalog.products.filter(p=>p.featured).slice(0,4)
   const fragrance=productById(cfg.fragrancePrimaryId)||catalog.products.find(p=>p.category==='Perfumes')
@@ -28,32 +27,31 @@ export function HomePage(){
   const brand=catalog.site.brandName||'EL PUNTO'
   const headline=clientHomeHeadline(cfg.heroHeadline)
   const headlineLines=headline.split(/\\n|\n/).filter(Boolean).slice(0,3)
+  // Display caps run ~1.18em each: size the headline so its longest word always fits the column (default wraps TODO EL / DROP.).
+  const headlineFit=Math.max(8.4,...headline.split(/\s+|\\n/).map(word=>word.length*1.18))
   const subheadline=clientHomeSubheadline(cfg.heroSubheadline,commercialLabels)
   const categories=activeCategories.map((category,i)=>({label:displayCategory(category.name).toUpperCase(),value:category.name,to:'/shop?cat='+encodeURIComponent(category.name),index:String(i+1).padStart(2,'0')}))
-  const marquee=(commercialLabels.map(x=>x.toUpperCase()).join(' — ')+' — ')
+  const separator=' · '
+  const marquee=commercialLabels.map(x=>x.toUpperCase()).join(separator)+separator
 
   return <main id="main">
     <section className="hero premium-hero" data-depth-section>
-      <div className="hero-ambient" aria-hidden="true"><i/><i/><i/></div>
-      <div className="hero-meta" data-reveal="meta"><span>DROP / 001</span><span>COLOMBIA / 2026</span></div>
-      <div className="hero-campaign">
+      <div className="hero-ambient" aria-hidden="true"/>
+      <div className="hero-copy">
+        <span className="eyebrow">{brand} — STREETWEAR + PERFUMERÍA</span>
+        <h1 className="hero-title" aria-label={headline} style={{'--headline-fit':headlineFit} as React.CSSProperties}>{headlineLines.map((line,i)=><span className="hero-title-line" key={line+i}>{line}</span>)}</h1>
+        <div className="hero-bottom"><p>{subheadline}</p><div className="hero-actions"><Link to="/shop" data-magnetic data-cursor="TIENDA" className="btn dark">VER LA COLECCIÓN</Link></div></div>
+        <div className="hero-index">
+          <div className="hero-index-head"><span>COMPRA DIRECTO</span><Link className="hero-index-all" to="/shop" data-cursor="ABRIR">TIENDA ↗</Link></div>
+          <nav className="hero-category-jump" aria-label="Comprar por categoría">{categories.map(c=><Link key={c.value} to={c.to} data-cursor="ABRIR">{c.label}</Link>)}</nav>
+        </div>
+      </div>
+      <figure className="hero-visual">
         <Link className="hero-main-frame" to={'/product/'+hero.slug} data-cursor="VER" data-depth="1">
           <ImageWithFallback src={hero.media[0]?.publicUrl} alt={hero.media[0]?.alt||displayProductName(hero)} fetchPriority="high"/>
-          <span className="hero-image-caption"><b>{displayProductName(hero)}</b><small>{hero.fit||displayCategory(hero.category)}</small></span>
         </Link>
-        {secondary&&<Link className="hero-secondary" to={'/product/'+secondary.slug} data-cursor="VER" data-depth="-1">
-          <ImageWithFallback src={secondary.media[0]?.publicUrl} alt={secondary.media[0]?.alt||displayProductName(secondary)}/><span>{displayProductName(secondary)}</span>
-        </Link>}
-      </div>
-      <div className="hero-copy" data-reveal="mask">
-        <span className="eyebrow">{brand} / NUEVA SELECCIÓN</span>
-        <nav className="hero-category-jump" aria-label="Comprar por categoría">
-          <span>COMPRA DIRECTO</span>
-          <div>{categories.map(c=><Link key={c.value} to={c.to} data-cursor="ABRIR">{c.label}<em>↗</em></Link>)}</div>
-        </nav>
-        <h1 className="hero-title" aria-label={headline}>{headlineLines.map((line,i)=><span className="hero-title-line" key={line+i}>{line}</span>)}</h1>
-        <div className="hero-bottom"><p>{subheadline}</p><div className="hero-actions"><Link to="/shop" data-magnetic data-cursor="TIENDA" className="btn dark">VER LA COLECCIÓN</Link><Link to={'/product/'+hero.slug} data-cursor="VER" className="text-action">VER PRODUCTO ↗</Link></div></div>
-      </div>
+        <figcaption className="hero-caption"><Link to={'/product/'+hero.slug}><b>{displayProductName(hero)}</b><span>{hero.fit||displayCategory(hero.category)}</span><em>VER PRODUCTO ↗</em></Link></figcaption>
+      </figure>
     </section>
 
     <div className="ticker" aria-label="Categorías de la tienda"><div className="ticker-track"><div className="ticker-group">{marquee.repeat(4)}</div><div className="ticker-group" aria-hidden="true">{marquee.repeat(4)}</div></div></div>
@@ -78,9 +76,12 @@ export function HomePage(){
 
     {editorial&&<section id="editorial" className="editorial" aria-labelledby="editorial-title">
       <div className="editorial-meta"><span>05 / SELECCIÓN</span><span>DROP / 001</span></div>
-      <div className="editorial-image" data-reveal="image"><ImageWithFallback src={editorial.media[0]?.publicUrl||cfg.editorialImageUrl||undefined} alt="Prenda real de la selección" loading="lazy"/></div>
-      <div className="editorial-copy" data-reveal="mask"><h2 id="editorial-title"><span className="editorial-title-bridge">ENCUENTRA</span><span className="editorial-title-bridge">TU ESTILO</span><i>AQUÍ.</i></h2><p>Explora las prendas disponibles y entra directamente al producto que quieres comprar.</p><Link to="/shop" className="text-action">VER TIENDA ↗</Link></div>
-      <span className="editorial-product-label">{displayProductName(editorial)}</span>
+      <Link className="editorial-image" to={'/product/'+editorial.slug} data-cursor="VER"><ImageWithFallback src={editorial.media[0]?.publicUrl||cfg.editorialImageUrl||undefined} alt={editorial.media[0]?.alt||displayProductName(editorial)} loading="lazy"/></Link>
+      <div className="editorial-copy">
+        <h2 id="editorial-title"><span className="editorial-title-bridge">ENCUENTRA</span><span className="editorial-title-bridge">TU ESTILO</span><i>AQUÍ.</i></h2>
+        <p>Explora las prendas disponibles y entra directamente al producto que quieres comprar.</p>
+        <div className="editorial-actions"><Link to="/shop" data-magnetic className="btn dark">VER TIENDA</Link><Link to={'/product/'+editorial.slug} className="text-action">{displayProductName(editorial)} ↗</Link></div>
+      </div>
     </section>}
 
     <TrustRail/>

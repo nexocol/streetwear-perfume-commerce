@@ -32,7 +32,6 @@ export function MotionController(){
       root.style.setProperty('--scroll-progress',String(progress))
       root.style.setProperty('--scroll-y',y+'px')
       root.style.setProperty('--scroll-velocity',String(velocity))
-      root.style.setProperty('--ticker-duration',Math.max(20,Math.min(28,24-velocity*2))+'s')
       root.style.setProperty('--motion-x',velocity*18+'px')
       root.style.setProperty('--menu-motion-x',velocity*-10+'px')
       root.style.setProperty('--hero-orb-y',progress*-80+'px')
@@ -84,14 +83,11 @@ export function MotionController(){
         if(!motion)return
 
         if(document.querySelector('.premium-hero')){
-          const hero=gsap.timeline({defaults:{ease:'power4.out'}})
-          hero
-            .fromTo('.premium-hero .hero-main-frame',{clipPath:'inset(0 0 100% 0)',scale:1.045},{clipPath:'inset(0 0 0% 0)',scale:1,duration:1.15},0)
-            .from('.premium-hero .hero-secondary',{autoAlpha:0,y:34,rotate:5,scale:.96,duration:.9},.18)
-            .from('.premium-hero .eyebrow',{y:14,duration:.45},.16)
-            .from('.premium-hero .hero-category-jump',{y:14,duration:.5},.18)
-            .from('.premium-hero .hero-title-line',{yPercent:28,stagger:.06,duration:.62},.22)
-            .from('.premium-hero .hero-bottom',{y:18,duration:.55},.34)
+          // Only the product is revealed; copy is legible from the first frame and just settles into place.
+          gsap.timeline({defaults:{ease:'power3.out'}})
+            .fromTo('.premium-hero .hero-main-frame',{clipPath:'inset(0% 0% 100% 0%)'},{clipPath:'inset(0% 0% 0% 0%)',duration:1.05,ease:'power4.inOut',clearProps:'clipPath'},0)
+            .fromTo('.premium-hero .hero-main-frame img',{scale:1.05},{scale:1,duration:1.6,clearProps:'transform'},0)
+            .from('.premium-hero .hero-title',{y:16,duration:.8,clearProps:'transform'},.12)
         }
 
         gsap.utils.toArray<HTMLElement>('.featured-section .card').forEach((card,index)=>{
@@ -117,12 +113,12 @@ export function MotionController(){
           })
         }
 
-        gsap.utils.toArray<HTMLElement>('.section-heading h2,.collections-heading h2,.fragrance-copy h2,.editorial-copy h2').forEach(el=>{
+        gsap.utils.toArray<HTMLElement>('.section-heading h2,.collections-heading h2,.fragrance-copy h2').forEach(el=>{
           gsap.from(el,{autoAlpha:0,y:34,duration:.78,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 88%',once:true}})
         })
 
         if(desktop&&document.querySelector('.premium-category-stage img')){
-          gsap.fromTo('.premium-category-stage img',{scale:1.08,yPercent:4},{scale:1,yPercent:-3,ease:'none',scrollTrigger:{trigger:'.collections',start:'top bottom',end:'bottom top',scrub:.7}})
+          gsap.fromTo('.premium-category-stage img',{scale:1.03,yPercent:2},{scale:1,yPercent:-2,ease:'none',scrollTrigger:{trigger:'.collections',start:'top bottom',end:'bottom top',scrub:.7}})
         }
         if(desktop&&document.querySelector('.fragrance-visual img')){
           gsap.fromTo('.fragrance-visual img',{scale:1.06,yPercent:-2},{scale:1.12,yPercent:5,ease:'none',scrollTrigger:{trigger:'.fragrance',start:'top bottom',end:'bottom top',scrub:.8}})
@@ -131,7 +127,7 @@ export function MotionController(){
           gsap.fromTo('.fragrance-object',{y:26,rotate:3},{y:-18,rotate:-.7,ease:'none',scrollTrigger:{trigger:'.fragrance',start:'top 82%',end:'bottom 12%',scrub:.85}})
         }
         if(desktop&&document.querySelector('.editorial-image')){
-          gsap.fromTo('.editorial-image',{y:42},{y:-28,ease:'none',scrollTrigger:{trigger:'.editorial',start:'top bottom',end:'bottom top',scrub:.75}})
+          gsap.fromTo('.editorial-image',{y:22},{y:-22,ease:'none',scrollTrigger:{trigger:'.editorial',start:'top bottom',end:'bottom top',scrub:.75}})
         }
 
         ScrollTrigger.refresh()

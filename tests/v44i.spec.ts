@@ -45,13 +45,27 @@ test.describe('V4.4I tee-01 final motion images',()=>{
     await expect(page.locator('.editorial-image img')).toHaveAttribute('src','/qa-tee/white.png')
   })
 
-  test('Home: ENCUENTRA gets the same bridge backing as TU ESTILO; AQUÍ. is untouched',async({page})=>{
-    await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/')
+  // V4.8: the editorial title sits beside the photo, so it needs no backing patch to be legible.
+  for(const [width,height] of [[1440,1000],[1024,900]] as const)test(`Home @${width}: ENCUENTRA / TU ESTILO / AQUÍ. read complete beside the photo, without a backing patch`,async({page})=>{
+    await page.setViewportSize({width,height});await mockApi(page);await page.goto('/')
     const spans=page.locator('#editorial-title > *')
     await expect(spans).toHaveText(['ENCUENTRA','TU ESTILO','AQUÍ.'])
-    const bg=await spans.evaluateAll(a=>a.map(e=>getComputedStyle(e,'::before').backgroundImage))
-    expect(bg[0]).toContain('linear-gradient');expect(bg[1]).toBe(bg[0]);expect(bg[2]).toBe('none')
     await expect(spans.nth(2)).not.toHaveClass(/editorial-title-bridge/)
+    await page.locator('#editorial-title').scrollIntoViewIfNeeded()
+    const m=await page.evaluate(()=>({
+      photoRight:document.querySelector('.editorial-image')!.getBoundingClientRect().right,
+      vw:document.documentElement.clientWidth,
+      lines:[...document.querySelectorAll('#editorial-title > *')].map(e=>{
+        const r=document.createRange();r.selectNodeContents(e);const rects=[...r.getClientRects()]
+        return {t:e.textContent,lines:new Set(rects.map(x=>Math.round(x.top))).size,left:Math.min(...rects.map(x=>x.left)),right:Math.max(...rects.map(x=>x.right)),backing:getComputedStyle(e,'::before').backgroundImage}
+      })
+    }))
+    for(const x of m.lines){
+      expect(x.lines,x.t+' must not wrap').toBe(1)
+      expect(x.right,x.t+' must fit inside the viewport').toBeLessThanOrEqual(m.vw-1)
+      expect(x.left,x.t+' must not overlap the photo').toBeGreaterThanOrEqual(m.photoRight)
+      expect(x.backing,x.t+' must not depend on a backing patch').toBe('none')
+    }
   })
 
   test('PDP: gallery 01 Blanca / 02 Verde / 03 Negra, COLOR + TALLA selectors',async({page})=>{
