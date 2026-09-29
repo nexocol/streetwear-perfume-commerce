@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const previewNoIndex = env.VITE_PREVIEW_NOINDEX !== 'false'
+  const previewNoIndex = env.VITE_PREVIEW_NOINDEX === 'true'
   const robotsMetaValue = previewNoIndex ? 'noindex,nofollow,noarchive,nosnippet' : 'index,follow'
   let outDir = resolve(process.cwd(), 'dist')
   return {
