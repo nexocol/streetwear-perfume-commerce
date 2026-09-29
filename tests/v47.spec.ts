@@ -74,6 +74,13 @@ test.describe('V4.7 premium UX + motion',()=>{
     for(const b of report.boxes){expect(b.left,b.text).toBeGreaterThanOrEqual(16);expect(b.right,b.text).toBeLessThanOrEqual(width-16)}
   })
 
+  for(const width of [1920,1440,1024])test(`fragrance parallax stays inside viewport @${width}`,async({page})=>{
+    await page.setViewportSize({width,height:1000});await mockApi(page);await page.goto('/')
+    const section=page.locator('.fragrance');await section.scrollIntoViewIfNeeded();await page.waitForTimeout(900)
+    const box=await page.locator('.fragrance-visual img').evaluate(el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,vw:document.documentElement.clientWidth}})
+    expect(box.left).toBeGreaterThanOrEqual(-1);expect(box.right).toBeLessThanOrEqual(box.vw+1)
+  })
+
   test('reduced motion removes decorative animation burden',async({page})=>{
     await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/')
     await expect(page.locator('.hero-ambient')).toHaveCSS('display','none')
