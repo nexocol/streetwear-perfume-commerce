@@ -12,8 +12,9 @@ const distDir = path.join(root, 'dist')
 let failures = 0
 const check = (ok, name, extra = '') => { console.log((ok ? 'PASS: ' : 'FAIL: ') + name + (extra ? '  ' + extra : '')); if (!ok) failures++ }
 
-function buildAndCapture(envValue, captureDir) {
-  execSync('npx vite build', { cwd: root, env: { ...process.env, VITE_PREVIEW_NOINDEX: envValue }, stdio: 'pipe' })
+function buildAndCapture(envValue, captureDir, mode = 'production') {
+  const command = mode === 'preview' ? 'npx vite build --mode preview' : 'npx vite build'
+  execSync(command, { cwd: root, env: { ...process.env, VITE_PREVIEW_NOINDEX: envValue }, stdio: 'pipe' })
   cpSync(distDir, captureDir, { recursive: true })
 }
 
@@ -38,7 +39,7 @@ try {
   check(!/X-Robots-Tag/i.test(prodHeaders), 'production: _headers has no X-Robots-Tag', JSON.stringify(prodHeaders))
 
   console.log('\n== preview build (VITE_PREVIEW_NOINDEX=true) ==')
-  buildAndCapture('true', previewDir)
+  buildAndCapture('true', previewDir, 'preview')
   const previewHtml = readFileSync(path.join(previewDir, 'index.html'), 'utf8')
   check(/<meta name="robots" content="noindex,nofollow,noarchive,nosnippet" id="robots-meta">/.test(previewHtml), 'preview: robots meta = full noindex directive')
   check(/<meta name="googlebot" content="noindex,nofollow,noarchive,nosnippet" id="googlebot-meta">/.test(previewHtml), 'preview: googlebot meta = full noindex directive')
