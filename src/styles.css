@@ -251,6 +251,7 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
 .ticker{position:relative}.ticker::before,.ticker::after{content:'';position:absolute;z-index:2;top:0;bottom:0;width:7vw;pointer-events:none}.ticker::before{left:0;background:linear-gradient(90deg,var(--paper),transparent)}.ticker::after{right:0;background:linear-gradient(-90deg,var(--paper),transparent)}
 .ticker-track{animation-duration:var(--ticker-duration,24s)}
 
+.featured-rail .card[data-reveal]{opacity:1}
 .featured-rail .media{clip-path:inset(0);transition:clip-path .55s var(--ease),transform .55s var(--ease)}
 .featured-rail .card:hover .media{transform:translateY(-5px)}
 .featured-rail .card:hover .meta h3{letter-spacing:-.025em}
