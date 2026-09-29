@@ -89,9 +89,11 @@ test.describe('V4.5 category quick nav on /shop',()=>{
   })
   for(const width of [768,430,390])test(`@${width}: row scrolls inside itself, keeps the selected item visible, no document overflow`,async({page})=>{
     await page.setViewportSize({width,height:900});await mockApi(page);await page.goto('/shop?cat=Streetwear')
-    const m=await page.evaluate(()=>{const n=document.querySelector('.shop-cats') as HTMLElement;const a=n.querySelector('[aria-current="true"]') as HTMLElement;const nr=n.getBoundingClientRect(),ar=a.getBoundingClientRect()
-      return {overflowX:getComputedStyle(n).overflowX,visible:ar.left>=nr.left-1&&ar.right<=nr.right+1,docOv:document.documentElement.scrollWidth-innerWidth,wrap:getComputedStyle(a).whiteSpace}})
-    expect(m.overflowX).toBe('auto');expect(m.visible).toBe(true);expect(m.docOv).toBeLessThanOrEqual(0);expect(m.wrap).toBe('nowrap')
+    await expect.poll(()=>page.evaluate(()=>{const n=document.querySelector('.shop-cats') as HTMLElement;const a=n.querySelector('[aria-current="true"]') as HTMLElement;const nr=n.getBoundingClientRect(),ar=a.getBoundingClientRect()
+      return ar.left>=nr.left-1&&ar.right<=nr.right+1})).toBe(true)
+    const m=await page.evaluate(()=>{const n=document.querySelector('.shop-cats') as HTMLElement;const a=n.querySelector('[aria-current="true"]') as HTMLElement
+      return {overflowX:getComputedStyle(n).overflowX,docOv:document.documentElement.scrollWidth-innerWidth,wrap:getComputedStyle(a).whiteSpace}})
+    expect(m.overflowX).toBe('auto');expect(m.docOv).toBeLessThanOrEqual(0);expect(m.wrap).toBe('nowrap')
   })
   for(const width of [1024,768,430,390])test(`@${width}: MENU has compact category links under TIENDA and they filter the shop`,async({page})=>{
     await page.setViewportSize({width,height:900});await mockApi(page);await page.goto('/shop')
