@@ -36,6 +36,21 @@ test.describe('V4.7 premium UX + motion',()=>{
     await expect(page).toHaveURL(/\/shop\?cat=/)
   })
 
+
+  test('first viewport shopping content is legible immediately and ambient art stays contained',async({page})=>{
+    await page.setViewportSize({width:1440,height:1000});await mockApi(page)
+    await page.goto('/')
+    await page.locator('.hero-category-jump').waitFor()
+    const m=await page.evaluate(()=>{
+      const jump=document.querySelector<HTMLElement>('.hero-category-jump')!
+      const title=document.querySelector<HTMLElement>('.premium-hero .hero-title')!
+      const ambient=[...document.querySelectorAll<HTMLElement>('.hero-ambient i')].map(el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right}})
+      return {jumpOpacity:Number(getComputedStyle(jump).opacity),titleOpacity:Number(getComputedStyle(title).opacity),vw:document.documentElement.clientWidth,ambient}
+    })
+    expect(m.jumpOpacity).toBeGreaterThan(.9);expect(m.titleOpacity).toBeGreaterThan(.9)
+    for(const a of m.ambient){expect(a.left).toBeGreaterThanOrEqual(-1);expect(a.right).toBeLessThanOrEqual(m.vw+1)}
+  })
+
   test('route shell, scroll progress and GSAP orchestration initialize without changing storefront behavior',async({page})=>{
     await page.setViewportSize({width:1440,height:1000});await mockApi(page);await page.goto('/')
     await expect(page.locator('.route-stage')).toBeVisible()
