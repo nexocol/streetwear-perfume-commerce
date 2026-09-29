@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
 export type CategoryQuickLink={value:string;label:string;to:string;count:number}
@@ -7,7 +7,7 @@ export type CategoryQuickLink={value:string;label:string;to:string;count:number}
 export function CategoryQuickNav({links,current,total}:{links:CategoryQuickLink[];current:string;total:number}){
   const ref=useRef<HTMLElement>(null)
   // On phones the row scrolls sideways: keep the selected category inside the visible part.
-  useEffect(()=>{
+  useLayoutEffect(()=>{
     const nav=ref.current;const active=nav?.querySelector<HTMLElement>('[aria-current="true"]')
     if(!nav||!active)return
     nav.scrollTo({left:Math.max(0,active.offsetLeft-(nav.clientWidth-active.offsetWidth)/2),behavior:'auto'})
