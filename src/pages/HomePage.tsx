@@ -33,7 +33,8 @@ export function HomePage(){
   const marquee=(commercialLabels.map(x=>x.toUpperCase()).join(' — ')+' — ')
 
   return <main id="main">
-    <section className="hero" data-depth-section>
+    <section className="hero premium-hero" data-depth-section>
+      <div className="hero-ambient" aria-hidden="true"><i/><i/><i/></div>
       <div className="hero-meta" data-reveal="meta"><span>DROP / 001</span><span>COLOMBIA / 2026</span></div>
       <div className="hero-campaign">
         <Link className="hero-main-frame" to={'/product/'+hero.slug} data-cursor="VER" data-depth="1">
@@ -46,6 +47,10 @@ export function HomePage(){
       </div>
       <div className="hero-copy" data-reveal="mask">
         <span className="eyebrow">{brand} / NUEVA SELECCIÓN</span>
+        <nav className="hero-category-jump" aria-label="Comprar por categoría">
+          <span>COMPRA DIRECTO</span>
+          <div>{categories.map(c=><Link key={c.value} to={c.to} data-cursor="ABRIR">{c.label}<em>↗</em></Link>)}</div>
+        </nav>
         <h1 className="hero-title" aria-label={headline}>{headlineLines.map((line,i)=><span className="hero-title-line" key={line+i}>{line}</span>)}</h1>
         <div className="hero-bottom"><p>{subheadline}</p><div className="hero-actions"><Link to="/shop" data-magnetic data-cursor="TIENDA" className="btn dark">VER LA COLECCIÓN</Link><Link to={'/product/'+hero.slug} data-cursor="VER" className="text-action">VER PRODUCTO ↗</Link></div></div>
       </div>
@@ -60,8 +65,8 @@ export function HomePage(){
 
     <section className="collections" aria-labelledby="category-title">
       <div className="collections-heading" data-reveal="mask"><span>03 / CATEGORÍAS</span><h2 id="category-title">ELIGE<br/>TU SECCIÓN.</h2><p>{categoryListText(commercialLabels)}. Entra directamente a la línea que estás buscando.</p></div>
-      <div className="category-stage" aria-hidden="true">{preview?<ImageWithFallback key={preview.id} src={preview.publicUrl} alt=""/>:<div className="image-fallback"><span>Imagen próximamente</span></div>}<span>{displayCategory(effectivePreview).toUpperCase()}</span></div>
-      <nav className="collection-links" aria-label="Categorías">{categories.map(c=><Link key={c.value} to={c.to} onMouseEnter={()=>setCategoryPreview(c.value)} onFocus={()=>setCategoryPreview(c.value)}><span>{c.index}</span><b>{c.label}</b><em><span className="cta-text">VER PRODUCTOS </span>↗</em></Link>)}</nav>
+      <div className="category-stage premium-category-stage" aria-hidden="true">{preview?<ImageWithFallback key={preview.id} src={preview.publicUrl} alt=""/>:<div className="image-fallback"><span>Imagen próximamente</span></div>}<span>{displayCategory(effectivePreview).toUpperCase()}</span></div>
+      <nav className="collection-links premium-collection-links" aria-label="Categorías">{categories.map(c=><Link key={c.value} to={c.to} onMouseEnter={()=>setCategoryPreview(c.value)} onFocus={()=>setCategoryPreview(c.value)}><span>{c.index}</span><b>{c.label}</b><em><span className="cta-text">VER PRODUCTOS </span>↗</em></Link>)}</nav>
     </section>
 
     {fragrance&&<section id="fragrance" className="fragrance" data-depth-section>
