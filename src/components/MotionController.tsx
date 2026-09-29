@@ -96,7 +96,6 @@ export function MotionController(){
 
         gsap.utils.toArray<HTMLElement>('.featured-section .card').forEach((card,index)=>{
           gsap.from(card,{
-            autoAlpha:0,
             y:54+(index%2)*18,
             rotate:desktop?(index%2?1.2:-.7):0,
             duration:.9,
