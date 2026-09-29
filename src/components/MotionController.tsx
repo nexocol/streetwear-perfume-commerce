@@ -88,10 +88,10 @@ export function MotionController(){
           hero
             .fromTo('.premium-hero .hero-main-frame',{clipPath:'inset(0 0 100% 0)',scale:1.045},{clipPath:'inset(0 0 0% 0)',scale:1,duration:1.15},0)
             .from('.premium-hero .hero-secondary',{autoAlpha:0,y:34,rotate:5,scale:.96,duration:.9},.18)
-            .from('.premium-hero .eyebrow',{autoAlpha:0,y:14,duration:.55},.2)
-            .from('.premium-hero .hero-category-jump',{autoAlpha:0,y:18,duration:.62},.26)
-            .from('.premium-hero .hero-title-line',{autoAlpha:0,yPercent:60,stagger:.075,duration:.8},.3)
-            .from('.premium-hero .hero-bottom',{autoAlpha:0,y:24,duration:.68},.5)
+            .from('.premium-hero .eyebrow',{y:14,duration:.45},.16)
+            .from('.premium-hero .hero-category-jump',{y:14,duration:.5},.18)
+            .from('.premium-hero .hero-title-line',{yPercent:28,stagger:.06,duration:.62},.22)
+            .from('.premium-hero .hero-bottom',{y:18,duration:.55},.34)
         }
 
         gsap.utils.toArray<HTMLElement>('.featured-section .card').forEach((card,index)=>{
