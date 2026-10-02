@@ -5,5 +5,5 @@ export function relatedProducts(product:Product,all:Product[]){
 }
 export function RelatedProducts({product,all}:{product:Product;all:Product[]}){
   const items=relatedProducts(product,all);if(!items.length)return null
-  return <section className="related"><div className="related-head"><span>RELACIONADOS</span><h2>TAMBIÉN TE PUEDE GUSTAR</h2></div><ProductGrid products={items} className="related-grid"/></section>
+  return <section className="related" aria-labelledby="related-title"><div className="related-head"><span>RELACIONADOS</span><h2 id="related-title">TAMBIÉN TE PUEDE GUSTAR</h2></div><ProductGrid products={items} className="related-grid"/></section>
 }

@@ -83,10 +83,9 @@ export function MotionController(){
         if(!motion)return
 
         if(document.querySelector('.premium-hero')){
-          // Only the product is revealed; copy is legible from the first frame and just settles into place.
+          // Product and shopping controls remain visible from the first frame; the still life only settles.
           gsap.timeline({defaults:{ease:'power3.out'}})
-            .fromTo('.premium-hero .hero-main-frame',{clipPath:'inset(0% 0% 100% 0%)'},{clipPath:'inset(0% 0% 0% 0%)',duration:1.05,ease:'power4.inOut',clearProps:'clipPath'},0)
-            .fromTo('.premium-hero .hero-main-frame img',{scale:1.05},{scale:1,duration:1.6,clearProps:'transform'},0)
+            .fromTo('.premium-hero .hero-main-frame img',{scale:1.02},{scale:1,duration:.7,clearProps:'transform'},0)
             .from('.premium-hero .hero-title',{y:16,duration:.8,clearProps:'transform'},.12)
         }
 

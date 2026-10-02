@@ -9,6 +9,7 @@ import { useCommerce } from '../commerce/CommerceProvider'
 import { useCatalog } from '../context/CatalogContext'
 import { useUI } from '../context/UIContext'
 import { ImageWithFallback } from './ImageWithFallback'
+import { ArrowIcon } from './ArrowIcon'
 
 export function ProductCard({product,index=0,className='',eager=false}:{product:Product;index?:number;className?:string;eager?:boolean}){
   const commerce=useCommerce();const ui=useUI();const {catalog}=useCatalog();const [open,setOpen]=useState(false);const selection=useVariantSelection(product.variants)
@@ -30,7 +31,7 @@ export function ProductCard({product,index=0,className='',eager=false}:{product:
     <Link className="media" to={'/product/'+product.slug} data-cursor="VER" aria-label={'Ver '+name}>
       <ImageWithFallback src={hero} alt={product.media[0]?.alt||name} loading={eager?'eager':'lazy'} fetchPriority={eager?'high':undefined} decoding="async"/>
       {second&&second!==hero&&<ImageWithFallback className="secondary" src={second} alt="" loading="lazy" decoding="async"/>}
-      <span className="index">{pad(index+1)}</span><div className="badges">{badges.map(b=><span key={b}>{b}</span>)}</div><span className="focus">VER ↗</span>
+      <span className="index">{pad(index+1)}</span><div className="badges">{badges.map(b=><span key={b}>{b}</span>)}</div><span className="focus">VER <ArrowIcon/></span>
     </Link>
     <div className="meta"><div><Link to={'/product/'+product.slug}><h3>{name}</h3></Link><p>{subtitle}</p></div><b>{moneyFrom(priceAmount,isRange)}</b></div>
     <div className="card-actions"><button onClick={quickAdd} data-cursor="AGREGAR" aria-expanded={open} disabled={!available.length}>{available.length?'AGREGAR RÁPIDO +':'AGOTADO'}</button></div>

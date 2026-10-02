@@ -1,4 +1,5 @@
 import { useUI } from '../context/UIContext'
+import { ArrowIcon } from './ArrowIcon'
 const items=[
   ['size','01','GUÍA DE TALLAS','Encuentra tu talla'],
   ['changes','02','CAMBIOS','Revisa las condiciones'],
@@ -13,7 +14,7 @@ export function TrustRail({hideSize=false}:{hideSize?:boolean}){
   return <section className={'trust-rail'+(hideSize?' trust-rail--3':'')} aria-label="Ayuda de compra">
     {shown.map(([key,,title,copy],i)=>{const index=String(i+1).padStart(2,'0');return<button key={key} onClick={()=>ui.openInfo(key)} aria-label={title+' — '+copy}>
       <span className="trust-index">{index}</span><b>{title}</b><small>{copy}</small>
-      <span className="trust-view" aria-hidden="true">VER</span><span className="trust-arrow" aria-hidden="true">↗</span>
+      <span className="trust-arrow"><ArrowIcon/></span>
     </button>})}
   </section>
 }
