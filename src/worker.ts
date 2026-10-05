@@ -222,16 +222,32 @@ async function handleApi(request:Request,env:Env,ctx:AccessContext){
     if(!checkoutContext)return json({error:'checkoutContext inválido (purchaseMethod/shippingRegion)'},400)
     if(!shopifyConfigured(env))return json({error:'Shopify no está configurado'},503)
 
-    const ids=[...new Set(lines.map((l:any)=>String(l.variantId)))]
+    const ids:string[]=[...new Set<string>(lines.map((l:any)=>String(l.variantId)))]
     const placeholders=ids.map(()=>'?').join(',')
-    const rows=(await env.DB.prepare(`SELECT id,shopify_variant_id FROM variants WHERE id IN (${placeholders})`).bind(...ids).all()).results||[]
-    const found=new Map(rows.map((r:any)=>[r.id,r.shopify_variant_id]))
+    const rows=(await env.DB.prepare(`SELECT v.id,v.shopify_variant_id,v.stock,p.shopify_product_id,p.status FROM variants v JOIN products p ON p.id=v.product_id WHERE v.id IN (${placeholders})`).bind(...ids).all()).results||[]
+    const found=new Map<string,any>(rows.map((r:any)=>[String(r.id),r]))
     const unknown=ids.filter(id=>!found.has(id))
     if(unknown.length)return json({error:'Variantes locales desconocidas: '+unknown.join(', ')},400)
-    const unmapped=ids.filter(id=>!found.get(id))
+    const unmapped=ids.filter(id=>!found.get(id)?.shopify_variant_id||!found.get(id)?.shopify_product_id)
     if(unmapped.length)return json({error:'Variantes sin mapping de Shopify: '+unmapped.join(', ')},409)
 
-    const shopifyLines=lines.map((l:any)=>({merchandiseId:toVariantGid(String(found.get(String(l.variantId)))),quantity:l.quantity}))
+    // A cartCreate response may contain a checkout URL even for an out-of-stock
+    // merchandise ID. Verify live Storefront availability before creating a cart.
+    let live:Map<string,any>
+    try{live=await shopifyFetchOverlay(env,[...new Set<string>(rows.map((r:any)=>String(r.shopify_product_id)))])}
+    catch(error){console.error('Shopify checkout availability check failed',error);return json({error:'No fue posible verificar disponibilidad en Shopify'},503)}
+    const requested=new Map<string,number>()
+    for(const line of lines)requested.set(line.variantId,(requested.get(line.variantId)||0)+line.quantity)
+    for(const id of ids){
+      const row:any=found.get(id)
+      const variant=live.get(row.shopify_product_id)?.variants.find((v:any)=>v.id===toVariantGid(row.shopify_variant_id))
+      if(row.status!=='active'||!variant?.availableForSale)return json({error:'Variante no disponible: '+id},409)
+      // Null D1 stock denotes untracked inventory; Shopify still controls its
+      // availableForSale flag, but its numeric quantity can be a stale default.
+      if(row.stock!==null&&(variant.quantityAvailable==null||variant.quantityAvailable<(requested.get(id)||0)))return json({error:'Stock insuficiente: '+id},409)
+    }
+
+    const shopifyLines=lines.map((l:any)=>({merchandiseId:toVariantGid(String(found.get(String(l.variantId)).shopify_variant_id)),quantity:l.quantity}))
     const buyerIp=request.headers.get('cf-connecting-ip')
     const siteRow=await env.DB.prepare('SELECT shipping_copy FROM site_settings WHERE id="default"').first()
     const terms=parseCommercialTerms(siteRow?.shipping_copy as string|null|undefined)

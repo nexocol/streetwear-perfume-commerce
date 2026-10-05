@@ -71,7 +71,8 @@ function startMockShopify() {
           id,
           variants: { edges: [
             { node: { id: 'gid://shopify/ProductVariant/2001', availableForSale: true, quantityAvailable: 42, price: { amount: '123456.00' }, compareAtPrice: null } },
-            { node: { id: 'gid://shopify/ProductVariant/2002', availableForSale: true, quantityAvailable: 10, price: { amount: '123456.00' }, compareAtPrice: null } }
+            { node: { id: 'gid://shopify/ProductVariant/2002', availableForSale: true, quantityAvailable: 10, price: { amount: '123456.00' }, compareAtPrice: null } },
+            { node: { id: 'gid://shopify/ProductVariant/2004', availableForSale: false, quantityAvailable: 0, price: { amount: '123456.00' }, compareAtPrice: null } }
           ] }
         } : null)
         return send(200, { data: { nodes } })
@@ -126,6 +127,7 @@ async function run() {
   q(dbA, "UPDATE variants SET shopify_variant_id='2002' WHERE id='tee-01-M'")
   q(dbA, "UPDATE variants SET stock=7 WHERE id='tee-01-S'")
   q(dbA, "UPDATE variants SET shopify_variant_id='2003' WHERE id='tee-01-L'")
+  q(dbA, "UPDATE variants SET shopify_variant_id='2004',stock=0 WHERE id='tee-01-XL'")
   q(dbA, "UPDATE products SET shopify_product_id='gid://shopify/Product/1002' WHERE id='denim-01'")
   // perfume-01 stays fully unmapped on purpose (used for the "reject unmapped variant" case)
 
@@ -180,6 +182,13 @@ async function run() {
   check(r.status === 400, 'checkout: pickup with a shippingRegion -> 400 (browser cannot force a region on pickup)')
   r = await j(await post({ lines: [validLine], checkoutContext: { purchaseMethod: 'pickup' } }))
   check(r.status === 200, 'checkout: pickup without shippingRegion -> ok', JSON.stringify(r.body))
+
+  const cartsBeforeUnavailable=mock.state.receivedBodies.filter(b=>String(b.query||'').includes('cartCreate')).length
+  r = await j(await post({ lines: [{ variantId: 'tee-01-XL', quantity: 1 }], checkoutContext: ctxPrepaidBogota }))
+  check(r.status === 409 && /no disponible/i.test(r.body.error), 'checkout: zero-stock variant rejected before cart creation', JSON.stringify(r.body))
+  r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 20 }, { variantId: 'tee-01-S', quantity: 20 }, { variantId: 'tee-01-S', quantity: 3 }], checkoutContext: ctxPrepaidBogota }))
+  check(r.status === 409 && /stock insuficiente/i.test(r.body.error), 'checkout: aggregate quantity cannot exceed live stock', JSON.stringify(r.body))
+  check(mock.state.receivedBodies.filter(b=>String(b.query||'').includes('cartCreate')).length===cartsBeforeUnavailable, 'checkout: unavailable variants never call cartCreate')
 
   console.log('\n== C. checkout: server ignores client-supplied Shopify/price data; attributes are server-derived ==')
   r = await j(await post({ lines: [{ variantId: 'tee-01-S', quantity: 2, shopifyVariantId: 'gid://shopify/ProductVariant/9999999', price: 1 }], checkoutContext: { purchaseMethod: 'cod', shippingRegion: 'bogota' } }))
