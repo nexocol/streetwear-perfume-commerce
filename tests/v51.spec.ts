@@ -4,11 +4,14 @@ import {seedCatalog} from '../src/data/seed'
 async function catalogFixture(page:Page){
   const catalog=structuredClone(seedCatalog)
   catalog.site.shopifyEnabled=true
-  for(const product of catalog.products)for(const variant of product.variants){
-    variant.shopifyVariantId='gid://shopify/ProductVariant/qa-'+variant.id
-    variant.price=product.price
-    variant.available=true
-    variant.stock=10
+  for(const product of catalog.products){
+    product.price=product.category==='Jeans'?210000:95000
+    for(const variant of product.variants){
+      variant.shopifyVariantId='gid://shopify/ProductVariant/qa-'+variant.id
+      variant.price=product.price
+      variant.available=true
+      variant.stock=10
+    }
   }
   const unavailable=catalog.products.find(product=>product.category==='Jeans')!
   unavailable.name='Pantalón sin inventario'
