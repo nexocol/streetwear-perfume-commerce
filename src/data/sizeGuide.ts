@@ -1,4 +1,4 @@
-export const sizeGuide={
+export const pantsSizeGuide={
   title:'Encuentra tu talla ideal',
   headers:['Talla','Cintura','Cadera','Tiro','Largo'],
   rows:[
@@ -10,3 +10,17 @@ export const sizeGuide={
   ],
   note:'Medidas aproximadas tomadas con la prenda extendida. Puede existir una variación de ±1–2 cm.'
 }
+
+export const shirtSizeGuide={
+  title:'Guía de tallas para camisetas',
+  headers:['Talla','Estatura recomendada'],
+  rows:[
+    ['M','1,62–1,70 m'],
+    ['L','1,70–1,79 m'],
+    ['XL','1,79–1,86 m'],
+    ['XXL','1,86 m en adelante'],
+  ],
+  note:'Referencia aproximada por estatura. El ajuste final también depende de la contextura y del fit de la prenda.'
+}
+
+export const sizeGuide=pantsSizeGuide

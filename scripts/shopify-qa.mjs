@@ -70,7 +70,8 @@ function startMockShopify() {
         const nodes = ids.map(id => id === 'gid://shopify/Product/1001' ? {
           id,
           variants: { edges: [
-            { node: { id: 'gid://shopify/ProductVariant/2001', availableForSale: true, quantityAvailable: 42, price: { amount: '123456.00' }, compareAtPrice: null } }
+            { node: { id: 'gid://shopify/ProductVariant/2001', availableForSale: true, quantityAvailable: 42, price: { amount: '123456.00' }, compareAtPrice: null } },
+            { node: { id: 'gid://shopify/ProductVariant/2002', availableForSale: true, quantityAvailable: 10, price: { amount: '123456.00' }, compareAtPrice: null } }
           ] }
         } : null)
         return send(200, { data: { nodes } })
@@ -122,6 +123,10 @@ async function run() {
   wr(['--file', sqlFile], dbA)
   q(dbA, "UPDATE products SET shopify_product_id='gid://shopify/Product/1001' WHERE id='tee-01'")
   q(dbA, "UPDATE variants SET shopify_variant_id='2001' WHERE id='tee-01-S'")
+  q(dbA, "UPDATE variants SET shopify_variant_id='2002' WHERE id='tee-01-M'")
+  q(dbA, "UPDATE variants SET stock=7 WHERE id='tee-01-S'")
+  q(dbA, "UPDATE variants SET shopify_variant_id='2003' WHERE id='tee-01-L'")
+  q(dbA, "UPDATE products SET shopify_product_id='gid://shopify/Product/1002' WHERE id='denim-01'")
   // perfume-01 stays fully unmapped on purpose (used for the "reject unmapped variant" case)
 
   console.log('\n== A. healthcheck ==')
@@ -211,7 +216,7 @@ async function run() {
   w = await startWorker(dbA, vars)
   let cat = await j(await fetch(w.base + '/api/catalog'))
   const teeVariantOff = cat.body.products.find(p => p.id === 'tee-01').variants.find(v => v.id === 'tee-01-S')
-  check(teeVariantOff.price === null && teeVariantOff.stock === null, 'catalog: shopify_enabled=0 -> D1 values untouched (preview unchanged)', JSON.stringify(teeVariantOff))
+  check(teeVariantOff.price === null && teeVariantOff.stock === 7, 'catalog: shopify_enabled=0 -> D1 values untouched (preview unchanged)', JSON.stringify(teeVariantOff))
 
   const settingsPut = await j(await fetch(w.base + '/api/admin/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shopifyEnabled: true, previewNoindex: true, storeStatus: 'preview' }) }))
   check(settingsPut.status === 200, 'admin settings: shopify_enabled can be toggled on')
@@ -220,6 +225,12 @@ async function run() {
   cat = await j(await fetch(w.base + '/api/catalog'))
   const teeVariantOn = cat.body.products.find(p => p.id === 'tee-01').variants.find(v => v.id === 'tee-01-S')
   check(teeVariantOn.price === 123456 && teeVariantOn.stock === 42 && teeVariantOn.available === true, 'catalog: shopify_enabled=1 -> mapped variant price/stock come from Shopify overlay', JSON.stringify(teeVariantOn))
+  const untrackedVariant=cat.body.products.find(p=>p.id==='tee-01').variants.find(v=>v.id==='tee-01-M')
+  check(untrackedVariant.available===true&&untrackedVariant.stock===null&&untrackedVariant.price===123456,'catalog: untracked variant remains available without exposing old quantity')
+  const retiredVariant=cat.body.products.find(p=>p.id==='tee-01').variants.find(v=>v.id==='tee-01-L')
+  check(retiredVariant.available===false&&retiredVariant.stock===0,'catalog: a retired Shopify variant cannot remain buyable through stale D1 data')
+  const absentProduct=cat.body.products.find(p=>p.id==='denim-01')
+  check(absentProduct.variants.every(v=>v.available===false&&v.stock===0),'catalog: a product absent from the headless channel is unavailable')
   const unmappedPerfume = cat.body.products.find(p => p.id === 'perfume-01').variants.find(v => v.id === 'perfume-01-u')
   check(unmappedPerfume.price === null, 'catalog: unmapped product keeps its D1 (null variant price) untouched by the overlay', JSON.stringify(unmappedPerfume))
   check(JSON.stringify(cat.body).indexOf(FAKE_TOKEN) === -1, 'catalog response never contains the token')

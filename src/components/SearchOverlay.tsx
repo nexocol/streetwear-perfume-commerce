@@ -5,12 +5,14 @@ import { useUI } from '../context/UIContext'
 import { ImageWithFallback } from './ImageWithFallback'
 import { ArrowIcon } from './ArrowIcon'
 import { displayCategory, displayProductName, displayProductSubtitle, productStyle } from '../lib/clientContent'
+import { availableProductsFirst } from '../lib/availability'
 
 export function SearchOverlay(){
   const {catalog}=useCatalog(); const ui=useUI(); const navigate=useNavigate(); const [query,setQuery]=useState('')
   const results=useMemo(()=>{
     const q=query.trim().toLowerCase(); if(!q)return []
-    return (catalog?.products||[]).filter(p=>[displayProductName(p),displayCategory(p.category),productStyle(p)||'',displayProductSubtitle(p),...(p.collections||[]).map(c=>c.name)].some(v=>v.toLowerCase().includes(q))).slice(0,8)
+    const matches=(catalog?.products||[]).filter(p=>[displayProductName(p),displayCategory(p.category),productStyle(p)||'',displayProductSubtitle(p),...(p.collections||[]).map(c=>c.name)].some(v=>v.toLowerCase().includes(q)))
+    return availableProductsFirst(matches,Boolean(catalog?.site?.shopifyEnabled)).slice(0,8)
   },[query,catalog])
   function submit(e:React.FormEvent){e.preventDefault();const q=query.trim();if(!q)return;ui.closeSearch();navigate('/shop?q='+encodeURIComponent(q))}
   return <div className={'search-overlay '+(ui.searchOpen?'open':'')} aria-hidden={!ui.searchOpen}>

@@ -20,9 +20,7 @@ function verifiedVariantPrice(v: Variant, shopifyEnabled: boolean): number | nul
 }
 
 export function canBuy(v: Variant, shopifyEnabled: boolean): boolean {
-  if (!isBuyable(v)) return false
-  if (!shopifyEnabled) return true
-  return v.shopifyVariantId != null && v.price != null
+  return isBuyable(v, shopifyEnabled)
 }
 
 // Card / listing price: single amount, or the lowest amount among priced buyable variants
@@ -31,9 +29,10 @@ export function productPrice(product: Product, shopifyEnabled: boolean): Product
   if (!shopifyEnabled) return { amount: product.price, isRange: false }
   const mapped = product.variants.filter(v => v.shopifyVariantId)
   if (mapped.length === 0) return { amount: null, isRange: false }
-  if (mapped.some(v => v.price == null)) return { amount: null, isRange: false }
-  const buyable = mapped.filter(v => isBuyable(v))
-  const pool = buyable.length ? buyable : mapped
+  const current = mapped.filter(v => v.available || v.price != null)
+  if (!current.length || current.some(v => v.price == null)) return { amount: null, isRange: false }
+  const buyable = current.filter(v => isBuyable(v, shopifyEnabled))
+  const pool = buyable.length ? buyable : current
   const amounts = pool.map(v => v.price as number)
   const min = Math.min(...amounts)
   const max = Math.max(...amounts)
