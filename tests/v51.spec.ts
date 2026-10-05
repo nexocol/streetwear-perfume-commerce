@@ -77,7 +77,7 @@ test('V5.1 shows the client home copy and shirt size guide',async({page})=>{
   const shirt=catalog.products.find(product=>product.category==='Streetwear')!
   await page.goto('/product/'+shirt.slug)
   await expect(page.locator('.pdp-info .price')).not.toContainText('PRECIO POR CONFIRMAR')
-  await page.getByRole('button',{name:/GUÍA DE TALLAS/}).click()
+  await page.locator('.pdp-info').getByRole('button',{name:'GUÍA DE TALLAS',exact:true}).click()
   const dialog=page.locator('#size-dialog')
   await expect(dialog).toContainText('Guía de tallas para camisetas')
   await expect(dialog).toContainText('1,62–1,70 m')
