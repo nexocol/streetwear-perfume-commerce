@@ -46,6 +46,9 @@ const categorySingular:Record<string,string>={
   Perfumes:'Perfume',
   Sudaderas:'Sudadera',
   Shorts:'Short',
+  Pantalonetas:'Pantaloneta',
+  Buzos:'Buzo',
+  Relojería:'Reloj',
 }
 /** Singular commercial type ("Camiseta"), or null for a category we have no singular for. */
 export function categorySingularLabel(category:string){
@@ -58,6 +61,10 @@ const categoryLabels:Record<string,string>={
   Conjuntos:'Conjuntos',
   Perfumes:'Perfumes',
   Sudaderas:'Sudaderas',
+  Shorts:'Pantalonetas',
+  Pantalonetas:'Pantalonetas',
+  Buzos:'Buzos',
+  Relojería:'Relojería',
 }
 
 export function displayCategory(category:string){
@@ -92,6 +99,7 @@ function isDefaultProvisionalName(product:Product){
 }
 
 export function productStyle(product:Product){
+  if(product.category==='Buzos')return /^camibuzo\b/i.test(product.name)||product.subtitle==='Camibuzo'?'Camibuzos':'Buzos'
   const source=[product.name,product.subtitle,product.description,...product.features,...product.media.map(m=>m.alt||'')].join(' ').toLowerCase()
   if(source.includes('brillo'))return 'Brillos'
   if(source.includes('roto')||source.includes('distressed'))return 'Rotos'
@@ -153,7 +161,7 @@ export function normalizeLegacyProduct(product:Product):Product{
   return {...product,name:displayProductName(product),subtitle:displayProductSubtitle(product),description:displayProductDescription(product)}
 }
 
-export const DEFAULT_HOME_HEADLINE='TODO EL DROP.'
+export const DEFAULT_HOME_HEADLINE='LA MEJOR CALIDAD EN CADA DROP'
 export function clientHomeHeadline(value:string){
   const normalized=(value||'').replace(/\r/g,'').trim()
   // Empty, the original seed and the previous default all resolve to the current default; client-written headlines pass through.
@@ -164,8 +172,7 @@ export function clientHomeHeadline(value:string){
 export function clientHomeSubheadline(value:string,categoryLabels:string[]=[]){
   const defaultCopy=/^(Jeans, prendas streetwear y fragancias del drop actual\.?|Pantalones, camisetas, conjuntos y perfumes\. Entra a la categoría que buscas y encuentra rápido lo que necesitas\.)$/i
   if(!value||defaultCopy.test(value)){
-    const list=categoryListText(categoryLabels.length?categoryLabels:['Pantalones','Camisetas','Conjuntos','Perfumes'])
-    return list+'. Entra a la categoría que buscas y encuentra rápido lo que necesitas.'
+    return 'Explora nuestro catálogo de ropa urbana y perfumes premium. Compra al detal directamente en la web con envíos a todo COL o escríbenos a WhatsApp para pedidos al por mayor'
   }
   return value
 }

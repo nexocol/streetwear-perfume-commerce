@@ -6,6 +6,7 @@ import { TrustRail } from '../components/TrustRail'
 import { ArrowIcon } from '../components/ArrowIcon'
 import { ImageWithFallback } from '../components/ImageWithFallback'
 import { activeCatalogCategories, categoryListText, clientHomeHeadline, clientHomeSubheadline, displayCategory, displayProductName } from '../lib/clientContent'
+import { availableProductsFirst } from '../lib/availability'
 
 export function HomePage(){
   const {catalog,productById}=useCatalog()
@@ -15,14 +16,14 @@ export function HomePage(){
   const cfg=catalog.homepage
   const hero=productById(cfg.heroProductId)||catalog.products.find(p=>p.category==='Jeans')||catalog.products[0]
   const featured=(cfg.featuredProductIds.map(productById).filter(Boolean).slice(0,4) as typeof catalog.products)
-  const selected=featured.length?featured:catalog.products.filter(p=>p.featured).slice(0,4)
+  const selected=availableProductsFirst(featured.length?featured:catalog.products.filter(p=>p.featured),Boolean(catalog.site.shopifyEnabled)).slice(0,4)
   const fragrance=productById(cfg.fragrancePrimaryId)||catalog.products.find(p=>p.category==='Perfumes')
   const fragrance2=productById(cfg.fragranceSecondaryId)||catalog.products.find(p=>p.category==='Perfumes'&&p.id!==fragrance?.id)
   const editorial=productById(cfg.editorialProductId)||catalog.products.find(p=>p.category==='Streetwear')
   const activeCategories=useMemo(()=>activeCatalogCategories(catalog),[catalog])
   const commercialLabels=activeCategories.map(c=>displayCategory(c.name))
   const effectivePreview=activeCategories.some(c=>c.name===categoryPreview)?categoryPreview:(activeCategories[0]?.name||'')
-  const preview=useMemo(()=>catalog.products.find(p=>p.status==='active'&&p.category===effectivePreview)?.media[0],[catalog.products,effectivePreview])
+  const preview=useMemo(()=>availableProductsFirst(catalog.products.filter(p=>p.status==='active'&&p.category===effectivePreview),Boolean(catalog.site.shopifyEnabled))[0]?.media[0],[catalog.products,catalog.site.shopifyEnabled,effectivePreview])
   if(!hero)return <main id="main" className="empty-results"><b>SIN PRODUCTOS ACTIVOS</b></main>
 
   const brand=catalog.site.brandName||'EL PUNTO'

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
-export type InfoKind='size'|'changes'|'advice'|'shipping'|null
+export type InfoKind='size'|'size-shirt'|'changes'|'advice'|'shipping'|null
 type UIState={
   menuOpen:boolean;cartOpen:boolean;searchOpen:boolean;info:InfoKind;toast:string|null;
   openMenu:()=>void;closeMenu:()=>void;openCart:()=>void;closeCart:()=>void;openSearch:()=>void;closeSearch:()=>void;

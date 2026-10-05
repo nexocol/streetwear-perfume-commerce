@@ -415,3 +415,6 @@ dialog{width:min(850px,94vw);max-height:88svh;overflow:auto;border:0;padding:52p
 .admin-shell.is-demo .admin-page-head{top:30px}
 @media(max-width:768px){.admin-shell.is-demo .admin-nav{height:auto}}
 @media(max-width:560px){.demo-strip span{display:none}}
+.card.is-unavailable .badges span:first-child{background:var(--ink);color:#fff}
+.card.is-unavailable .media img{filter:saturate(.72)}
+.card-actions button:disabled{cursor:not-allowed;color:var(--muted)}

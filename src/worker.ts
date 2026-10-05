@@ -100,12 +100,12 @@ async function applyShopifyOverlay(env:Env,products:any[]){
   for(const p of products){
     if(!p.shopifyProductId)continue
     const op=overlay.get(p.shopifyProductId)
-    if(!op)continue
+    if(!op){for(const v of p.variants){v.available=false;v.stock=0}continue}
     const byGid=new Map(op.variants.map((v:any)=>[v.id,v]))
     for(const v of p.variants){
       if(!v.shopifyVariantId)continue
       const ov:any=byGid.get(toVariantGid(v.shopifyVariantId))
-      if(!ov)continue
+      if(!ov){v.available=false;v.stock=0;continue}
       v.price=ov.price
       v.stock=ov.quantityAvailable
       v.available=ov.availableForSale
