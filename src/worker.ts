@@ -107,7 +107,9 @@ async function applyShopifyOverlay(env:Env,products:any[]){
       const ov:any=byGid.get(toVariantGid(v.shopifyVariantId))
       if(!ov){v.available=false;v.stock=0;continue}
       v.price=ov.price
-      v.stock=ov.quantityAvailable
+      // A null D1 stock marks a variant sold without an inventory count. Shopify's
+      // Storefront quantityAvailable can still expose a previous numeric quantity.
+      v.stock=v.stock===null?null:ov.quantityAvailable
       v.available=ov.availableForSale
     }
   }
