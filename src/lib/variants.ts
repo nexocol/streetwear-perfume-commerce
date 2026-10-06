@@ -15,18 +15,19 @@ export function variantSummary(v:Variant){
   return v.color?.trim()?v.color.trim()+' · '+v.size:v.size
 }
 
-export function useVariantSelection(variants:Variant[],shopifyEnabled=false){
+export function useVariantSelection(variants:Variant[],shopifyEnabled=false,initialVariantId?:string|null,initialColor?:string|null){
+  const initialVariant=initialVariantId?variants.find(v=>v.id===initialVariantId||v.shopifyVariantId===initialVariantId):undefined
   const colors=useMemo(()=>variantColors(variants),[variants])
   const hasColors=colors.length>1
-  const [pickedColor,setPickedColor]=useState<string|null>(null)
-  const [size,setSize]=useState<string|null>(variants.length===1?variants[0].size:variants.length&&variants.every(v=>v.size==='Única')?'Única':null)
+  const [pickedColor,setPickedColor]=useState<string|null>(initialVariant?.color||initialColor||null)
+  const [size,setSize]=useState<string|null>(initialVariant?.size||(variants.length===1?variants[0].size:variants.length&&variants.every(v=>v.size==='Única')?'Única':null))
   const defaultColor=useMemo(()=>colors.find(c=>variants.some(v=>colorKey(v)===c&&isBuyable(v,shopifyEnabled)))??colors[0]??'',[colors,variants,shopifyEnabled])
   const color=hasColors?(pickedColor!==null&&colors.includes(pickedColor)?pickedColor:defaultColor):null
   const sizeOptions=useMemo(()=>hasColors?variants.filter(v=>colorKey(v)===color):variants,[variants,hasColors,color])
   const variant=useMemo(()=>sizeOptions.find(v=>v.size===size)||null,[sizeOptions,size])
   function selectColor(next:string){
     setPickedColor(next)
-    const stillThere=variants.some(v=>colorKey(v)===next&&v.size===size&&isBuyable(v,shopifyEnabled))
+    const stillThere=variants.some(v=>colorKey(v)===next&&v.size===size)
     if(!stillThere)setSize(null)
   }
   return {colors,hasColors,color,sizeOptions,size,variant,selectColor,selectSize:setSize}

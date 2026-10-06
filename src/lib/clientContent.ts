@@ -1,4 +1,5 @@
 import type { CatalogSnapshot, Product } from '../types'
+import { expandWatchProducts } from './watchCatalog'
 
 export type CommercialTerms={
   codMessage:string
@@ -83,7 +84,7 @@ export function categoryShopLinks(catalog:CatalogSnapshot){
     value:category.name,
     label:displayCategory(category.name),
     to:'/shop?cat='+encodeURIComponent(category.name),
-    count:catalog.products.filter(product=>product.status==='active'&&(product.categoryId===category.id||product.category===category.name)).length,
+    count:expandWatchProducts(catalog.products.filter(product=>product.status==='active'&&(product.categoryId===category.id||product.category===category.name))).length,
   }))
 }
 

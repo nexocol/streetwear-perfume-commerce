@@ -24,7 +24,7 @@ async function catalogFixture(page:Page){
   catalog.categories.push({id:'qa-watches',slug:'relojeria',name:'Relojería',enabled:true,sortOrder:7})
   const watch=structuredClone(available)
   Object.assign(watch,{id:'qa-watch',slug:'qa-watch',name:'Reloj deportivo octagonal',categoryId:'qa-watches',category:'Relojería',fit:null})
-  watch.variants=['Negro','Bicolor esfera blanca con marcadores'].map((color,i)=>({...watch.variants[0],id:'qa-watch-'+i,productId:'qa-watch',size:'Única',color,price:70000,stock:0,available:true}))
+  watch.variants=['Negro','Bicolor esfera blanca con marcadores'].map((color,i)=>({...watch.variants[0],id:'qa-watch-'+i,productId:'qa-watch',size:'Única',color,price:70000,stock:0,available:true,shopifyVariantId:'gid://shopify/ProductVariant/qa-watch-'+i}))
   catalog.products.push(watch)
   for(const [id,name,subtitle] of [['qa-buzo','Buzo Supreme','Buzo'],['qa-camibuzo','Camibuzo Godspeed Calavera','Camibuzo']]){
     const product=structuredClone(available)

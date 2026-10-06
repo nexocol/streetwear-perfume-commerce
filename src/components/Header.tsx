@@ -7,6 +7,7 @@ import { BrandMark, BRAND_FALLBACK_NAME } from './BrandMark'
 import { categoryShopLinks, displayProductName } from '../lib/clientContent'
 import { ImageWithFallback } from './ImageWithFallback'
 import { ArrowIcon } from './ArrowIcon'
+import { expandWatchProducts } from '../lib/watchCatalog'
 
 function SearchIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.2 4.2"/></svg>}
 function BagIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 8.5h13l1.2 11H4.3l1.2-11Z"/><path d="M8.6 9V6.7a3.4 3.4 0 0 1 6.8 0V9"/></svg>}
@@ -58,7 +59,7 @@ export function Header(){
       </div>
       <div className="premium-menu-body">
         <nav className="premium-menu-nav" aria-label="Navegación de tienda">
-          <Link className="premium-menu-shop" to="/shop"><span>TIENDA</span><em>{catalog?.products.filter(p=>p.status==='active').length||0}</em></Link>
+          <Link className="premium-menu-shop" to="/shop"><span>TIENDA</span><em>{expandWatchProducts(catalog?.products.filter(p=>p.status==='active')||[]).length}</em></Link>
           <div className="premium-menu-cats mobile-menu-cats" role="group" aria-label="Categorías">
             {categoryLinks.map((c,i)=><Link key={c.value} to={c.to} data-cat={c.value} onMouseEnter={()=>setMenuPreview(c.value)} onFocus={()=>setMenuPreview(c.value)}>
               <span>{String(i+1).padStart(2,'0')}</span><b>{c.label}</b><em><ArrowIcon/></em>

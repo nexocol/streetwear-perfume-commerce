@@ -11,6 +11,8 @@ export interface Product {
   id:string;slug:string;name:string;nameStatus:string;subtitle:string|null;description:string|null;categoryId:string|null;category:string;fit:string|null;color:string|null;fragranceFamily:string|null;
   price:number|null;compareAtPrice:number|null;featured:boolean;bestSeller:boolean;newArrival:boolean;status:ProductStatus;sortOrder:number;shopifyProductId:string|null;shopifyHandle:string|null;
   features:string[];variants:Variant[];media:ProductMedia[];collections:Collection[]
+  /** Client-only catalog entry for one existing Shopify variant. */
+  listingVariantId?:string;listingKey?:string
 }
 export interface HomepageSettings {id:string;heroProductId:string|null;heroSecondaryProductId:string|null;heroHeadline:string;heroSubheadline:string;featuredProductIds:string[];fragrancePrimaryId:string|null;fragranceSecondaryId:string|null;editorialProductId:string|null;editorialImageUrl:string|null}
 export interface SiteSettings {id:string;brandName:string|null;logoUrl:string|null;instagram:string|null;whatsapp:string|null;email:string|null;shippingCopy:string|null;changesCopy:string|null;advisoryCopy:string|null;storeStatus:string;shopifyEnabled:boolean;previewNoindex:boolean}

@@ -6,13 +6,14 @@ import { FilterPanel } from '../components/FilterPanel'
 import { CategoryQuickNav } from '../components/CategoryQuickNav'
 import { TrustRail } from '../components/TrustRail'
 import { activeCatalogCategories, categoryShopLinks, displayCategory, displayProductDescription, displayProductName, productStyle } from '../lib/clientContent'
+import { expandWatchProducts } from '../lib/watchCatalog'
 
 export function ShopPage(){
   const {catalog}=useCatalog();const [params,setParams]=useSearchParams();const [filtersOpen,setFiltersOpen]=useState(false)
   if(!catalog)return null
   const filters={cat:params.get('cat')||'Todos',size:params.get('size')||'',fit:params.get('fit')||'',sort:params.get('sort')||'featured'}
   const q=(params.get('q')||'').trim().toLowerCase()
-  const visibleProducts=catalog.products.filter(p=>p.status==='active')
+  const visibleProducts=expandWatchProducts(catalog.products.filter(p=>p.status==='active'))
   const activeCategories=activeCatalogCategories(catalog)
   const categoryLinks=categoryShopLinks(catalog)
   const sizes=[...new Set(visibleProducts.flatMap(p=>p.variants.map(v=>v.size)).filter(s=>s!=='Única'))]

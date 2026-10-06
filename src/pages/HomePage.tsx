@@ -7,6 +7,7 @@ import { ArrowIcon } from '../components/ArrowIcon'
 import { ImageWithFallback } from '../components/ImageWithFallback'
 import { activeCatalogCategories, categoryListText, clientHomeHeadline, clientHomeSubheadline, displayCategory, displayProductName } from '../lib/clientContent'
 import { availableProductsFirst } from '../lib/availability'
+import { expandWatchProducts } from '../lib/watchCatalog'
 
 export function HomePage(){
   const {catalog,productById}=useCatalog()
@@ -16,14 +17,14 @@ export function HomePage(){
   const cfg=catalog.homepage
   const hero=productById(cfg.heroProductId)||catalog.products.find(p=>p.category==='Jeans')||catalog.products[0]
   const featured=(cfg.featuredProductIds.map(productById).filter(Boolean).slice(0,4) as typeof catalog.products)
-  const selected=availableProductsFirst(featured.length?featured:catalog.products.filter(p=>p.featured),Boolean(catalog.site.shopifyEnabled)).slice(0,4)
+  const selected=availableProductsFirst(expandWatchProducts(featured.length?featured:catalog.products.filter(p=>p.featured)),Boolean(catalog.site.shopifyEnabled)).slice(0,4)
   const fragrance=productById(cfg.fragrancePrimaryId)||catalog.products.find(p=>p.category==='Perfumes')
   const fragrance2=productById(cfg.fragranceSecondaryId)||catalog.products.find(p=>p.category==='Perfumes'&&p.id!==fragrance?.id)
   const editorial=productById(cfg.editorialProductId)||catalog.products.find(p=>p.category==='Streetwear')
   const activeCategories=useMemo(()=>activeCatalogCategories(catalog),[catalog])
   const commercialLabels=activeCategories.map(c=>displayCategory(c.name))
   const effectivePreview=activeCategories.some(c=>c.name===categoryPreview)?categoryPreview:(activeCategories[0]?.name||'')
-  const preview=useMemo(()=>availableProductsFirst(catalog.products.filter(p=>p.status==='active'&&p.category===effectivePreview),Boolean(catalog.site.shopifyEnabled))[0]?.media[0],[catalog.products,catalog.site.shopifyEnabled,effectivePreview])
+  const preview=useMemo(()=>availableProductsFirst(expandWatchProducts(catalog.products.filter(p=>p.status==='active'&&p.category===effectivePreview)),Boolean(catalog.site.shopifyEnabled))[0]?.media[0],[catalog.products,catalog.site.shopifyEnabled,effectivePreview])
   if(!hero)return <main id="main" className="empty-results"><b>SIN PRODUCTOS ACTIVOS</b></main>
 
   const brand=catalog.site.brandName||'EL PUNTO'
@@ -60,7 +61,7 @@ export function HomePage(){
 
     <section className="featured-section" aria-labelledby="drop-title">
       <div className="section-heading" data-reveal="meta"><div><span>02 / SELECCIÓN</span><p>PRODUCTOS DESTACADOS</p></div><h2 id="drop-title">PIEZAS<br/>DESTACADAS</h2><Link to="/shop">VER TODO <ArrowIcon/></Link></div>
-      <div className="featured-rail" data-cursor="DRAG">{selected.map((p,i)=><ProductCard key={p.id} product={p} index={i} eager={i<2} className={'featured-card featured-card-'+(i+1)}/>)}</div>
+      <div className="featured-rail" data-cursor="DRAG">{selected.map((p,i)=><ProductCard key={p.listingKey||p.id} product={p} index={i} eager={i<2} className={'featured-card featured-card-'+(i+1)}/>)}</div>
     </section>
 
     <section className="collections" aria-labelledby="category-title">
