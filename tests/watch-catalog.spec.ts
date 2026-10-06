@@ -46,7 +46,11 @@ test('Supreme opens with the three-color cover and selects each color photo',asy
       ...['Gris','Negro','Rojo'].map((color,i)=>({id:`supreme-${color}`,productId:supremeId,mediaType:'front' as const,storagePath:null,publicUrl:`/watch-${i}.png`,alt:`Buzo Supreme ${color.toLowerCase()} frente y espalda`,sortOrder:i+2}))],
   }
   await mockCatalog(page,{...catalog,products:[...catalog.products,supreme]})
+  await page.setViewportSize({width:390,height:844})
+  await page.goto('/shop?cat=Buzos')
+  await expect(page.locator('.supreme-card .media img').first()).toHaveCSS('object-fit','contain')
   await page.goto('/product/buzo-supreme')
+  await expect(page.locator('.supreme-gallery .hero-shot img')).toHaveCSS('object-fit','contain')
   await expect(page.locator('.gallery img').first()).toHaveAttribute('src','/watch-0.png')
   await page.locator('.color-options button',{hasText:'Rojo'}).click()
   await expect(page.locator('.gallery img').first()).toHaveAttribute('src','/watch-2.png')
