@@ -45,7 +45,7 @@ const label=(page:Page)=>page.locator('.pdp-info > span').first()
 const facts=(page:Page)=>page.locator('.product-facts > div')
 
 test.describe('V4.4H apparel PDP without fit: no "Por confirmar"',()=>{
-  for(const [id,upper,singular] of [['qa-camiseta','CAMISETAS','Camiseta'],['qa-sudadera','SUDADERAS','Sudadera'],['qa-short','SHORTS','Short'],['qa-pantalon','PANTALONES','Pantalón']] as const){
+  for(const [id,upper,singular] of [['qa-camiseta','CAMISETAS','Camiseta'],['qa-sudadera','SUDADERAS','Sudadera'],['qa-short','PANTALONETAS','Short'],['qa-pantalon','PANTALONES','Pantalón']] as const){
     test(`${id}: label ${upper}, fact PRODUCTO / ${singular}`,async({page})=>{
       await mockApi(page,catalog())
       await page.goto('/product/'+id)

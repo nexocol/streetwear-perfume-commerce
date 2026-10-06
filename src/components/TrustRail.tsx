@@ -7,7 +7,7 @@ const items=[
   ['shipping','04','ENVÍOS Y PAGOS','Contra entrega / anticipado'],
 ] as const
 
-/** `hideSize` drops the size-guide card (perfumes have no sizes); the remaining cards are renumbered. */
+/** `hideSize` drops the size-guide card for categories sold in one option; the remaining cards are renumbered. */
 export function TrustRail({hideSize=false}:{hideSize?:boolean}){
   const ui=useUI()
   const shown=hideSize?items.filter(([key])=>key!=='size'):items

@@ -23,4 +23,18 @@ export const shirtSizeGuide={
   note:'Referencia aproximada por estatura. El ajuste final también depende de la contextura y del fit de la prenda.'
 }
 
+export const hoodieSizeGuide={
+  ...shirtSizeGuide,
+  title:'Guía de tallas para buzos y sudaderas',
+  rows:[['S','Consulta las medidas del modelo'],...shirtSizeGuide.rows],
+  note:'Referencia general por estatura para prendas superiores. La talla S y el ajuste de cada buzo o sudadera requieren confirmar las medidas del modelo; solicita asesoría si tienes dudas.'
+}
+
+export const shortsSizeGuide={
+  title:'Tallas de pantalonetas',
+  headers:['Tallas del modelo'],
+  rows:[['S · M · L · XL']],
+  note:'No hay medidas de cintura, cadera o largo confirmadas para este modelo. Solicita asesoría para elegir la talla antes de comprar.'
+}
+
 export const sizeGuide=pantsSizeGuide

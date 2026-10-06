@@ -40,7 +40,7 @@ function ProductDetail({product,initialVariantId,initialColor}:{product:Product;
       ||(!selection.hasColors?product.variants.find(v=>v.size===size):undefined)
     selectVariant(next?.shopifyVariantId||next?.id||null,selection.color)
   }
-  return <main id="main" className="pdp-page"><section className="pdp"><ProductGallery key={initialVariantId||initialColor||'default'} media={media} name={product.name} supreme={product.slug==='buzo-supreme'}/><ProductInfo product={product} selection={selection} onSelectColor={selectColor} onSelectSize={selectSize}/></section><RelatedProducts product={product} all={catalog?.products||[]}/><TrustRail hideSize={product.category==='Perfumes'}/></main>
+  return <main id="main" className="pdp-page"><section className="pdp"><ProductGallery key={initialVariantId||initialColor||'default'} media={media} name={product.name} supreme={product.slug==='buzo-supreme'}/><ProductInfo product={product} selection={selection} onSelectColor={selectColor} onSelectSize={selectSize}/></section><RelatedProducts product={product} all={catalog?.products||[]}/><TrustRail hideSize={product.category==='Perfumes'||product.category==='Relojería'}/></main>
 }
 export function ProductPage(){
   const {slug}=useParams();const [params]=useSearchParams();const {catalog,productBySlug}=useCatalog();if(!catalog)return null
