@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Product } from '../types'
-import { availableColors, colorLabel, useVariantSelection } from '../lib/variants'
+import { availableColors, colorLabel } from '../lib/variants'
+import type { VariantSelection } from '../lib/variants'
 import { moneyFrom } from '../lib/format'
 import { canBuy, selectedVariantPrice, productPrice } from '../lib/pricing'
 import { useCommerce } from '../commerce/CommerceProvider'
@@ -10,17 +11,18 @@ import { ShippingPayments } from './ShippingPayments'
 import { ArrowIcon } from './ArrowIcon'
 import { categorySingularLabel, displayCategory, displayProductDescription, displayProductFeatures, displayProductName, displayProductSubtitle, productStyle } from '../lib/clientContent'
 import { productIsAvailable } from '../lib/availability'
+import { isWatchFamily } from '../lib/watchCatalog'
 
-export function ProductInfo({product}:{product:Product}){
+export function ProductInfo({product,selection,onSelectColor,onSelectSize}:{product:Product;selection:VariantSelection;onSelectColor:(color:string)=>void;onSelectSize:(size:string)=>void}){
   const commerce=useCommerce();const ui=useUI();const {catalog}=useCatalog();const single=product.variants.length===1||product.variants.every(v=>v.size==='Única')
   const shopifyEnabled=Boolean(catalog?.site?.shopifyEnabled)
-  const selection=useVariantSelection(product.variants,shopifyEnabled);const {variant}=selection
+  const {variant}=selection
   const colorsAvailable=useMemo(()=>availableColors(product.variants,shopifyEnabled),[product.variants,shopifyEnabled])
   const unavailable=!variant||!canBuy(variant,shopifyEnabled)
   const productAvailable=productIsAvailable(product,shopifyEnabled)
   const catalogPrice=productPrice(product,shopifyEnabled)
   const displayPrice=variant?selectedVariantPrice(variant,product,shopifyEnabled):catalogPrice.amount
-  const name=displayProductName(product);const subtitle=displayProductSubtitle(product);const description=displayProductDescription(product);const style=productStyle(product);const features=displayProductFeatures(product)
+  const name=displayProductName(product)+(isWatchFamily(product)&&variant?.color?' · '+variant.color:'');const subtitle=displayProductSubtitle(product);const description=displayProductDescription(product);const style=productStyle(product);const features=displayProductFeatures(product)
   const perfume=product.category==='Perfumes'
   const typeLabel=categorySingularLabel(product.category)
   const titleFit=Math.max(7.5,...name.split(/\s+/).map(word=>word.length*1.02))
@@ -31,10 +33,10 @@ export function ProductInfo({product}:{product:Product}){
     <div className="product-facts">{perfume?<div><span>FAMILIA OLFATIVA</span><b>{product.fragranceFamily||'Por confirmar'}</b></div>:style?<div><span>{product.category==='Jeans'?'ESTILO / SUBTIPO':'ESTILO / FIT'}</span><b>{style}</b></div>:typeLabel&&<div><span>PRODUCTO</span><b>{typeLabel}</b></div>}<div><span>DISPONIBILIDAD</span><b>{!productAvailable||(variant&&unavailable)?'NO DISPONIBLE':variant?'DISPONIBLE':'SELECCIONA TALLA'}</b></div></div>
     {selection.hasColors&&<>
       <div className="size-heading"><span>COLOR</span><b className="color-current" data-testid="selected-color">{colorLabel(selection.color||'')}</b></div>
-      <div className="color-options" role="group" aria-label="Color">{selection.colors.map(c=>{const buyable=product.variants.some(v=>(v.color||'').trim()===c&&canBuy(v,shopifyEnabled));return <button key={c||'_'} className={selection.color===c?'selected':''} aria-pressed={selection.color===c} disabled={!buyable} onClick={()=>selection.selectColor(c)}>{colorLabel(c)}</button>})}</div>
+      <div className="color-options" role="group" aria-label="Color">{selection.colors.map(c=>{const buyable=product.variants.some(v=>(v.color||'').trim()===c&&canBuy(v,shopifyEnabled));return <button key={c||'_'} className={selection.color===c?'selected':''} aria-pressed={selection.color===c} disabled={!buyable&&selection.color!==c} onClick={()=>onSelectColor(c)}>{colorLabel(c)}</button>})}</div>
     </>}
     <div className="size-heading"><span>{single?'OPCIÓN':'SELECCIONA TU TALLA'}</span>{product.category==='Jeans'&&<button className="text-link" onClick={()=>ui.openInfo('size')}>GUÍA DE TALLAS <ArrowIcon/></button>}{product.category==='Streetwear'&&<button className="text-link" onClick={()=>ui.openInfo('size-shirt')}>GUÍA DE TALLAS <ArrowIcon/></button>}</div>
-    <div className="sizes" role="group" aria-label="Talla">{selection.sizeOptions.map(v=><button key={v.id} className={selection.size===v.size?'selected':''} aria-pressed={selection.size===v.size} disabled={!canBuy(v,shopifyEnabled)} onClick={()=>selection.selectSize(v.size)}>{v.size}</button>)}</div>
+    <div className="sizes" role="group" aria-label="Talla">{selection.sizeOptions.map(v=><button key={v.id} className={selection.size===v.size?'selected':''} aria-pressed={selection.size===v.size} disabled={!canBuy(v,shopifyEnabled)&&selection.size!==v.size} onClick={()=>onSelectSize(v.size)}>{v.size}</button>)}</div>
     <button className="btn dark wide add-button" onClick={add} disabled={unavailable} data-cursor="AGREGAR">{variant?unavailable?'NO DISPONIBLE':'AGREGAR AL CARRITO':'SELECCIONA TU TALLA'}</button>
 
     {perfume?<details open><summary>COMPOSICIÓN / NOTAS <span>+</span></summary><div className="perfume-profile">
