@@ -64,6 +64,8 @@ test('watch listing, search, deep link and cart keep the exact variant',async({p
   await expect(page.locator('.catalog-grid article.card').first()).toContainText('Azul')
   await page.locator('.catalog-grid article.card').first().locator('.card-actions button').click()
   await expect(page.locator('[data-testid=cart-color]')).toHaveText('COLOR / Azul')
+  await expect(page.locator('.cart-item img')).toHaveAttribute('src','/watch-0.png')
+  await expect(page.locator('.cart-item b').first()).toHaveText('Reloj deportivo octagonal · Azul')
   const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('streetwear.cart.v3')||'[]'))
   expect(stored[0]).toMatchObject({productId:familyId,variantId:variants[0].id})
   await page.goto(productLink(expandWatchProducts([watch])[1]))
