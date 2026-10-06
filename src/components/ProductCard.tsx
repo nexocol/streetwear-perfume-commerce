@@ -31,7 +31,7 @@ export function ProductCard({product,index=0,className='',eager=false}:{product:
     const variant=selection.variant;if(!variant||!canBuy(variant,shopifyEnabled))return
     await commerce.addLine(product,variant);ui.showToast(name+' agregado');setOpen(false);ui.openCart()
   }
-  return <article className={'card '+(!productAvailable?'is-unavailable ':'')+className} data-reveal="card" style={{'--i':index%4} as React.CSSProperties}>
+  return <article className={'card '+(product.slug==='buzo-supreme'?'supreme-card ':'')+(!productAvailable?'is-unavailable ':'')+className} data-reveal="card" style={{'--i':index%4} as React.CSSProperties}>
     <Link className="media" to={productLink(product)} data-cursor="VER" aria-label={'Ver '+name}>
       <ImageWithFallback src={hero} alt={product.media[0]?.alt||name} loading={eager?'eager':'lazy'} fetchPriority={eager?'high':undefined} decoding="async"/>
       {second&&second!==hero&&<ImageWithFallback className="secondary" src={second} alt="" loading="lazy" decoding="async"/>}
