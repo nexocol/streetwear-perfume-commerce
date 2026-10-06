@@ -33,5 +33,5 @@ export function ShopPage(){
     <CategoryQuickNav links={categoryLinks} current={filters.cat} total={visibleProducts.length}/>
     <div className="shop-toolbar"><button className="filter-trigger" onClick={()=>setFiltersOpen(true)} aria-expanded={filtersOpen}><span>FILTRAR / ORDENAR</span><b>{active?'('+active+')':'+'}</b></button><span>{filters.cat==='Todos'?'TODAS LAS CATEGORÍAS':displayCategory(filters.cat).toUpperCase()}</span></div>
     <FilterPanel open={filtersOpen} filters={filters} categories={activeCategories} sizes={sizes} styles={styles} count={list.length} onChange={change} onClear={clear} onClose={()=>setFiltersOpen(false)}/>
-    <section className="catalog"><ProductGrid products={list} className="catalog-grid"/></section><TrustRail/></main>
+    <section className="catalog"><ProductGrid products={list} className="catalog-grid"/></section><TrustRail hideSize={filters.cat==='Perfumes'||filters.cat==='Relojería'}/></main>
 }
